@@ -3,18 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manga Tracker</title>
+    <title>SweetWare MangaPill Chapter Tracker</title>
+    <style>
+        /* Layout styling */
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        /* Main content styling */
+        .content {
+            width: 70%;
+        }
+        /* Sidebar styling for the logs */
+        .sidebar {
+            width: 25%;
+            border-left: 1px solid #ccc;
+            padding-left: 20px;
+        }
+        /* Add spacing between list items */
+        li {
+            margin-bottom: 20px;
+        }
+        /* Style for new chapter notification */
+        .new-chapters {
+            color: red;
+            font-weight: bold;
+        }
+        /* Style for aligning input and button side by side */
+        .form-inline {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Adds space between input and button */
+        }
+        /* Styling for the logout button */
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #f44336; /* Red color for visibility */
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b; /* Darker red on hover */
+        }
+
+        /* Styling for the logs section */
+        .logs {
+            margin-top: 50px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Manga Tracker</h1>
-    <a href="{{ url_for('add_manga') }}">Add New Manga</a>
-    <ul>
-        {% for manga in manga_list %}
-            <li>
-                <strong>{{ manga['title'] }}</strong> (Chapters: {{ manga['chapter_count'] }})
-                <a href="{{ url_for('delete_manga', id=manga['id']) }}">Delete</a>
-            </li>
-        {% endfor %}
-    </ul>
+    <a href="{{ url_for('logout') }}" class="logout-btn">Log Out</a>
+    
+    <h1>MangaPill Chapter Tracker</h1>
+
+    <div class="container">
+        <!-- Main Content -->
+        <div class="content">
+            <p>Paste URL from <u><strong>Manga Chapter List</strong></u> Below to Add:</p>
+            <form action="{{ url_for('add_manga') }}" method="POST" class="form-inline">
+                <label for="url">URL:</label>
+                <input type="text" name="url" id="url" required>
+                <button type="submit">Add Manga</button>
+            </form>
+
+            <br><br>
+
+            <!-- Button to Check for Updates -->
+            <form action="{{ url_for('check_updates') }}" method="post">
+                <button type="submit">Check for Updates</button>
+            </form>
+            <br>
+            <p>Last Checked: {{ last_checked }}</p>
+
+            <!-- List of Mangas -->
+            <ul>
+                {% for manga in manga_list %}
+                    <li>
+                        <strong>{{ manga['title'] }}</strong><br> 
+                        Latest Chapter: {{ manga['latest_chapter_title'] }}<br>
+                        Total Chapters: {{ manga['chapter_count'] }}
+                        {% if manga['new_chapters_count'] > 0 %}
+                            <span class="new-chapters"># {{ manga['new_chapters_count'] }} new chapters!</span>
+                        {% endif %} <br>
+                        <a href="{{ manga['url'] }}" target="_blank">Read on MangaPill</a> |
+                        <a href="{{ url_for('delete_manga', id=manga['id']) }}">Delete</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="logs">
+            <h3>Activity Log</h3>
+            <ul>
+                {% for log in logs %}
+                    <li>{{ log['date_added'] }} - {{ log['manga_title'] }}
+                        {% if log['chapters_added'] > 0 %}
+                            : {{ log['chapters_added'] }} new chapters added!
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>                
+    </div>
 </body>
 </html>
