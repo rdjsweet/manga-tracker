@@ -1,0 +1,200 @@
+/* Body styling */
+body {
+    background: grey;
+    margin: 0; /* Remove default body margin */
+    padding: 0;
+    display: flex;
+    justify-content: center; /* Center all content horizontally */
+    align-items: flex-start; /* Align content to the top */
+    min-height: 100vh;
+}
+
+/* Wrapper styling */
+.wrap {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    width: 80%;
+    max-width: 1200px;
+    padding: 80px 20px 20px;
+    border: 3px solid #a8a6a6;
+    position: relative;
+    box-sizing: border-box; /* Ensure padding and border are included in width/height */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: calc(100vh - 20px); /* Adjust to ensure footer fits inside the view */
+}
+
+/* Layout styling */
+.container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+/* Main content styling */
+.content {
+    width: 70%;
+}
+
+/* Sidebar styling for the logs */
+.sidebar {
+    width: 25%;
+    border-left: 1px solid #ccc;
+    padding-left: 20px;
+    max-height: 600px; /* Limit sidebar height */
+    overflow-y: auto; /* Allow scrolling for logs */
+}
+
+/* Add spacing between list items */
+li {
+    margin-bottom: 20px;
+    text-align: left; /* Ensure all list items are aligned to the left */
+}
+
+h1 {
+    text-align: center;
+    font-size: 4em;
+}
+
+h3 {
+    text-align: center;
+    margin-top: 0;
+}
+
+/* Style for new chapter notification */
+.new-chapters {
+    color: red;
+    font-weight: bold;
+}
+
+/* Style for aligning input and button side by side */
+.form-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Adds space between input and button */
+}
+
+/* Styling for the logout button */
+.logout-btn {
+    position: absolute; /* Position relative to the .wrap container */
+    top: 20px; /* Distance from the top of the .wrap container */
+    right: 20px; /* Distance from the right side of the .wrap container */
+    background-color: #f44336; /* Red color for visibility */
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    z-index: 1000; /* Ensure it stays above other elements within the wrap */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a slight shadow for visibility */
+}
+
+/* Logout button hover effect */
+.logout-btn:hover {
+    background-color: #c0392b; /* Darker red on hover */
+}
+
+
+/* Styling for the logs section */
+.logs {
+    margin-top: 100px;
+    padding-left: 20px;
+}
+
+.flashes {
+    margin-top: 1em;
+    margin-bottom: 0;
+}
+
+/* Style for success messages (green text) */
+.alert-success {
+    color: green;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Style for error messages (red text) */
+.alert-error {
+    color: red;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+/* Style for info messages (blue text) */
+.alert-info {
+    color: blue;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+/* General styling for the footer */
+.site-footer {
+    text-align: center;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-top: 1px solid #a8a6a6;
+    width: 100%;
+    margin-top: auto; /* Push footer to the bottom */
+    box-sizing: border-box;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    /* Adjust wrapper to fill more of the screen on mobile and adjust padding */
+    .wrap {
+        width: 95%;
+        padding: 0px 10px 10px 10px; /* Increase top padding to avoid overlap with logout button */
+    }
+
+    /* Adjust logout button for better positioning on mobile */
+    .logout-btn {
+        top: 5px; /* Adjust for smaller screens if necessary */
+        right: 5px; /* Adjust for smaller screens if necessary */
+        padding: 8px 15px; /* Adjust padding for mobile */
+    }
+
+    /* Wrap the main container to be vertical on smaller screens */
+    .container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Main content and sidebar should be full width on mobile */
+    .content, .sidebar {
+        width: 100%;
+        margin-bottom: 20px; /* Add spacing between sections */
+    }
+
+    /* Make logs scrollable with max height */
+    .sidebar {
+        max-height: 400px; /* Limit height on mobile */
+        overflow-y: auto;
+        border: none; /* Remove border for a cleaner look on mobile */
+    }
+
+    /* Make "Check for Updates" button span full width */
+    .check-updates-btn {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    /* Reduce padding and margin for mobile layout */
+    .logs {
+        margin-top: 0;
+        padding-left: 0;
+    }
+
+    li {
+        text-align: left; /* Ensure list items are always aligned to the left on mobile */
+    }
+
+    h1 {
+        font-size: 3em;
+        text-align: left; /* Ensure headings are always aligned to the left on mobile */
+    }
+
+    /* Center text */
+    p {
+        text-align: center;
+    }
+}
