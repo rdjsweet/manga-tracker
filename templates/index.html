@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="wrap">
-        <a href="{{ url_for('logout') }}" class="logout-btn">Log Out</a>
+        <a href="{{ url_for('auth.logout') }}" class="logout-btn">Log Out</a>
         
         <h1>MangaPill Chapter Tracker</h1>
 
@@ -16,7 +16,7 @@
             <!-- Main Content -->
             <div class="content">
                 <p>Paste URL from <u><strong>Manga Chapter List</strong></u> Below to Add</p>
-                <form action="{{ url_for('add_manga') }}" method="POST" class="form-inline">
+                <form action="{{ url_for('manga.add_manga') }}" method="POST" class="form-inline">
                     <input type="text" name="url" id="url" placeholder="Enter manga URL here" required>
                     <button type="submit">Add Manga</button>
                 </form>
@@ -35,7 +35,7 @@
                 <br>
 
                 <!-- Button to Check for Updates -->
-                <form action="{{ url_for('check_updates') }}" method="post">
+                <form action="{{ url_for('manga.check_updates') }}" method="post">
                     <button type="submit" class="check-updates-btn">Check for Updates</button>
                 </form>                
                 <br>
@@ -52,7 +52,7 @@
                                 <span class="new-chapters"># {{ manga['new_chapters_count'] }} new chapter(s)!</span>
                             {% endif %} <br>
                             <a href="{{ manga['url'] }}" target="_blank">Read on MangaPill</a> |
-                            <a href="{{ url_for('delete_manga', id=manga['id']) }}">Delete</a>
+                            <a href="{{ url_for('manga.delete_manga', id=manga['id']) }}">Delete</a>
                         </li>
                     {% endfor %}
                 </ul>

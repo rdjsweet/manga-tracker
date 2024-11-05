@@ -1,11 +1,11 @@
 /* Body styling */
 body {
     background: grey;
-    margin: 0; /* Remove default body margin */
+    margin: 0;
     padding: 0;
     display: flex;
-    justify-content: center; /* Center all content horizontally */
-    align-items: flex-start; /* Align content to the top */
+    justify-content: center;
+    align-items: flex-start;
     min-height: 100vh;
 }
 
@@ -18,11 +18,11 @@ body {
     padding: 80px 20px 20px;
     border: 3px solid #a8a6a6;
     position: relative;
-    box-sizing: border-box; /* Ensure padding and border are included in width/height */
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: calc(100vh - 20px); /* Adjust to ensure footer fits inside the view */
+    min-height: calc(100vh - 20px);
 }
 
 /* Layout styling */
@@ -42,14 +42,14 @@ body {
     width: 25%;
     border-left: 1px solid #ccc;
     padding-left: 20px;
-    max-height: 600px; /* Limit sidebar height */
-    overflow-y: auto; /* Allow scrolling for logs */
+    max-height: 600px;
+    overflow-y: auto;
 }
 
 /* Add spacing between list items */
 li {
     margin-bottom: 20px;
-    text-align: left; /* Ensure all list items are aligned to the left */
+    text-align: left;
 }
 
 h1 {
@@ -77,23 +77,22 @@ h3 {
 
 /* Styling for the logout button */
 .logout-btn {
-    position: absolute; /* Position relative to the .wrap container */
-    top: 20px; /* Distance from the top of the .wrap container */
-    right: 20px; /* Distance from the right side of the .wrap container */
-    background-color: #f44336; /* Red color for visibility */
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #f44336;
     color: white;
     padding: 10px 20px;
     text-decoration: none;
     border-radius: 5px;
-    z-index: 1000; /* Ensure it stays above other elements within the wrap */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a slight shadow for visibility */
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Logout button hover effect */
 .logout-btn:hover {
-    background-color: #c0392b; /* Darker red on hover */
+    background-color: #c0392b; 
 }
-
 
 /* Styling for the logs section */
 .logs {
@@ -103,7 +102,7 @@ h3 {
 
 .flashes {
     margin-top: 1em;
-    margin-bottom: 0;
+    margin-bottom: 1em;
 }
 
 /* Style for success messages (green text) */
@@ -134,7 +133,7 @@ h3 {
     background-color: #f9f9f9;
     border-top: 1px solid #a8a6a6;
     width: 100%;
-    margin-top: auto; /* Push footer to the bottom */
+    margin-top: auto;
     box-sizing: border-box;
 }
 
@@ -143,14 +142,14 @@ h3 {
     /* Adjust wrapper to fill more of the screen on mobile and adjust padding */
     .wrap {
         width: 95%;
-        padding: 0px 10px 10px 10px; /* Increase top padding to avoid overlap with logout button */
+        padding: 0px 10px 10px 10px;
     }
 
     /* Adjust logout button for better positioning on mobile */
     .logout-btn {
-        top: 5px; /* Adjust for smaller screens if necessary */
-        right: 5px; /* Adjust for smaller screens if necessary */
-        padding: 8px 15px; /* Adjust padding for mobile */
+        top: 5px;
+        right: 5px;
+        padding: 8px 15px;
     }
 
     /* Wrap the main container to be vertical on smaller screens */
@@ -162,14 +161,14 @@ h3 {
     /* Main content and sidebar should be full width on mobile */
     .content, .sidebar {
         width: 100%;
-        margin-bottom: 20px; /* Add spacing between sections */
+        margin-bottom: 20px;
     }
 
     /* Make logs scrollable with max height */
     .sidebar {
-        max-height: 400px; /* Limit height on mobile */
+        max-height: 400px;
         overflow-y: auto;
-        border: none; /* Remove border for a cleaner look on mobile */
+        border: none;
     }
 
     /* Make "Check for Updates" button span full width */
@@ -185,12 +184,12 @@ h3 {
     }
 
     li {
-        text-align: left; /* Ensure list items are always aligned to the left on mobile */
+        text-align: left;
     }
 
     h1 {
         font-size: 3em;
-        text-align: left; /* Ensure headings are always aligned to the left on mobile */
+        text-align: left;
     }
 
     /* Center text */
