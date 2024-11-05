@@ -18,7 +18,7 @@ To get started with the MangaPill Chapter Tracker locally:
 ### Prerequisites
 
 - Python 3.x
-- SQLite
+- PostgreSQL
 - Flask and required Python packages (see requirements.txt)
 
 ### Installation
@@ -34,39 +34,49 @@ To get started with the MangaPill Chapter Tracker locally:
    pip install -r requirements.txt
    ```
 
-3. **Set up the database**
-   ```sh
-   python
-   >>> from app import get_db_connection
-   >>> connection = get_db_connection()
-   >>> connection.execute("""
-   CREATE TABLE IF NOT EXISTS User (
-       id INTEGER PRIMARY KEY AUTOINCREMENT,
-       username TEXT UNIQUE NOT NULL,
+3. **Set up the PostgreSQL database**
+
+   You need to create a PostgreSQL database and configure the connection settings:
+
+   - Create a database named `manga_tracker` (or your preferred name).
+   - Create an environment file `.env` in the root directory with the following variable (update with your credentials):
+
+     ```env
+     DATABASE_URL=postgresql://<username>:<password>@localhost:5432/manga_tracker
+     ```
+
+   - **Create tables:**
+
+   Open your PostgreSQL client or connect using `psql` and execute the following SQL to create the necessary tables:
+
+   ```sql
+   CREATE TABLE users (
+       id SERIAL PRIMARY KEY,
+       username VARCHAR(150) UNIQUE NOT NULL,
        password_hash TEXT NOT NULL,
-       first_login BOOLEAN DEFAULT 1
+       first_login BOOLEAN DEFAULT TRUE
    );
-   CREATE TABLE IF NOT EXISTS Manga (
-       id INTEGER PRIMARY KEY AUTOINCREMENT,
-       title TEXT NOT NULL,
+
+   CREATE TABLE manga (
+       id SERIAL PRIMARY KEY,
+       title VARCHAR(255) NOT NULL,
        url TEXT NOT NULL,
-       last_checked DATETIME,
+       last_checked TIMESTAMP,
        chapter_count INTEGER,
-       latest_chapter_title TEXT,
-       new_chapters_count INTEGER,
-       user_id INTEGER,
-       FOREIGN KEY(user_id) REFERENCES User(id)
+       latest_chapter_title VARCHAR(255),
+       new_chapters_count INTEGER DEFAULT 0,
+       user_id INTEGER NOT NULL,
+       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
    );
-   CREATE TABLE IF NOT EXISTS Log (
-       id INTEGER PRIMARY KEY AUTOINCREMENT,
-       manga_title TEXT,
+
+   CREATE TABLE log (
+       id SERIAL PRIMARY KEY,
+       manga_title VARCHAR(255),
        chapters_added INTEGER,
-       date_added DATETIME,
-       user_id INTEGER,
-       FOREIGN KEY(user_id) REFERENCES User(id)
+       date_added TIMESTAMP,
+       user_id INTEGER NOT NULL,
+       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
    );
-   """
-   >>> connection.close()
    ```
 
 4. **Run the Application**
@@ -77,20 +87,24 @@ To get started with the MangaPill Chapter Tracker locally:
 
 ## Project Structure
 
-- **app.py**: Main application file containing routes for user authentication, manga management, and logging.
-- **scraper.py**: Handles scraping of manga information from MangaPill.
-- **helpers.py**: Contains reusable utility functions like database connections.
-- **routes/**: Directory with separate route modules to keep concerns organized (e.g., `auth.py` for user routes, `manga.py` for manga-related routes).
+- **app.py**: Main application file initializing the Flask app, registering Blueprints, and configuring settings.
+- **views/**: Contains all route-related code, divided for better separation of concerns:
+  - **auth.py**: Handles user registration, login, and logout functionality.
+  - **manga.py**: Handles manga tracking, adding, updating, and deleting.
+- **models/**: Contains database models (e.g., `User`, `Manga`, `Log`) to define the structure and handle data-related operations.
+- **utils/**:
+  - **db.py**: Contains helper functions for managing database connections.
 - **templates/**: HTML templates for rendering pages.
-- **static/**: Contains CSS and other static assets.
+- **static/**: Contains CSS and other static assets for styling and frontend purposes.
 
 ## Technologies Used
 
 - **Python**: Backend scripting language.
 - **Flask**: Web framework used to build the application.
-- **SQLite**: Simple database for local storage of users, manga, and logs.
+- **PostgreSQL**: Database for storing users, manga, and logs.
 - **BeautifulSoup**: For web scraping manga details from MangaPill.
 - **Flask-Login**: Manages user authentication.
+- **WTForms**: Provides form validation for registration and login.
 
 ## Future Improvements
 
@@ -113,3 +127,4 @@ This project is open-source, licensed under the MIT License. Feel free to use an
 ---
 
 Thanks for checking out the MangaPill Chapter Tracker! If you have any questions or feedback, feel free to open an issue or reach out.
+```
