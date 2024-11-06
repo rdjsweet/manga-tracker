@@ -62,7 +62,7 @@
                 <h3>Activity Log</h3>
                 <ul>
                     {% for log in logs %}
-                        <li>{{ log['date_added'] }} - {{ log['manga_title'] }}
+                        <li>{{ log['date_added'] }} - <strong>{{ log['manga_title'] }}</strong>
                             {% if log['chapters_added'] > 0 %}
                                 : {{ log['chapters_added'] }} new chapter(s) added!
                             {% endif %}
