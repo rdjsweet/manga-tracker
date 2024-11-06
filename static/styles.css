@@ -1,199 +1,220 @@
 /* Body styling */
 body {
-    background: grey;
+    background-color: grey;
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
+    font-family: Arial, sans-serif;
 }
 
 /* Wrapper styling */
 .wrap {
-    font-family: Arial, sans-serif;
     background-color: #f9f9f9;
-    width: 80%;
+    width: 90%;
     max-width: 1200px;
-    padding: 80px 20px 20px;
-    border: 3px solid #a8a6a6;
-    position: relative;
+    padding: 40px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    min-height: calc(100vh - 20px);
+    position: relative;
 }
 
-/* Layout styling */
-.container {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-}
-
-/* Main content styling */
-.content {
-    width: 70%;
-}
-
-/* Sidebar styling for the logs */
-.sidebar {
-    width: 25%;
-    border-left: 1px solid #ccc;
-    padding-left: 20px;
-    max-height: 600px;
-    overflow-y: auto;
-}
-
-/* Add spacing between list items */
-li {
-    margin-bottom: 20px;
-    text-align: left;
-}
-
+/* Centered title styling */
 h1 {
     text-align: center;
-    font-size: 4em;
+    font-size: 2.5em;
+    margin: 40px 0 20px 0;
+    color: #333;
 }
 
-h3 {
-    text-align: center;
-    margin-top: 0;
-}
-
-/* Style for new chapter notification */
-.new-chapters {
-    color: red;
-    font-weight: bold;
-}
-
-/* Style for aligning input and button side by side */
-.form-inline {
-    display: flex;
-    align-items: center;
-    gap: 10px; /* Adds space between input and button */
-}
-
-/* Styling for the logout button */
+/* Logout button styling fixed in the top-right corner of wrap */
 .logout-btn {
     position: absolute;
-    top: 20px;
+    top: 15px;
     right: 20px;
     background-color: #f44336;
     color: white;
     padding: 10px 20px;
+    font-size: 1em;
     text-decoration: none;
     border-radius: 5px;
-    z-index: 1000;
+    cursor: pointer;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s;
+    z-index: 10;
 }
 
-/* Logout button hover effect */
 .logout-btn:hover {
-    background-color: #c0392b; 
+    background-color: #c0392b;
 }
 
-/* Styling for the logs section */
+/* Centered <p> tag */
+.wrap p {
+    text-align: center;
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+/* Form styling for inline input and button */
+.form-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.form-inline input[type="text"] {
+    padding: 12px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    flex-grow: 1;
+    box-sizing: border-box;
+    height: 100%;
+}
+
+.form-inline button {
+    padding: 12px 16px;
+    font-size: 1em;
+    font-weight: bold;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    height: 100%;
+}
+
+.form-inline button:hover {
+    background-color: #2980b9;
+}
+
+/* Check for Updates button styling */
+.check-updates-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1em;
+    font-weight: bold;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+}
+
+.check-updates-btn:hover {
+    background-color: #2980b9;
+}
+
+/* Container for main content and logs */
+.container {
+    display: flex;
+    flex-direction: column; /* Default to vertical stacking */
+    gap: 20px;
+    align-items: stretch; /* Ensure content takes full width in mobile */
+}
+
+/* Main content styling with grid layout for list items */
+.content {
+    width: 100%;
+}
+
+/* Manga list styling */
+.content ul {
+    display: grid;
+    grid-template-columns: 1fr; /* Default to one column for mobile */
+    gap: 20px;
+    padding: 0;
+}
+
+.content li {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    list-style: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Logs styling */
 .logs {
-    margin-top: 100px;
+    border-top: 1px solid #ccc;
     padding-left: 20px;
+    font-size: 1em;
+    margin-top: 40px;
 }
 
+/* Flash messages */
 .flashes {
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin-top: 20px;
+    text-align: center;
+    font-size: 1em;
 }
 
-/* Style for success messages (green text) */
-.alert-success {
-    color: green;
-    font-weight: bold;
-    text-decoration: none;
-}
-
-/* Style for error messages (red text) */
-.alert-error {
-    color: red;
-    font-weight: bold;
-    text-decoration: underline;
-}
-
-/* Style for info messages (blue text) */
-.alert-info {
-    color: blue;
-    font-weight: bold;
-    text-decoration: underline;
-}
-
-/* General styling for the footer */
+/* Footer styling */
 .site-footer {
     text-align: center;
     padding: 15px;
-    background-color: #f9f9f9;
-    border-top: 1px solid #a8a6a6;
-    width: 100%;
-    margin-top: auto;
-    box-sizing: border-box;
+    font-size: 0.9em;
+    color: #999;
+    border-top: 1px solid #ccc;
+    margin-top: 40px;
 }
 
-/* Mobile Styles */
-@media (max-width: 768px) {
-    /* Adjust wrapper to fill more of the screen on mobile and adjust padding */
-    .wrap {
-        width: 95%;
-        padding: 0px 10px 10px 10px;
+/* Desktop view adjustments */
+@media (min-width: 769px) {
+    .container {
+        flex-direction: row;
+        justify-content: space-between;
     }
 
-    /* Adjust logout button for better positioning on mobile */
+    .content {
+        width: 65%; /* Reduce content width to allow more space for logs */
+    }
+
+    .logs {
+        width: 35%; /* Increased width for logs */
+        margin-top: 0; /* Aligns with main content in desktop */
+        border-top: none;
+    }
+
+    .content ul {
+        grid-template-columns: 1fr 1fr; /* Two columns for desktop view */
+    }
+}
+
+/* Mobile styling */
+@media (max-width: 768px) {
+    .wrap {
+        width: 95%;
+        padding: 20px;
+    }
+
     .logout-btn {
-        top: 5px;
-        right: 5px;
+        top: 10px;
+        right: 10px;
         padding: 8px 15px;
     }
 
-    /* Wrap the main container to be vertical on smaller screens */
-    .container {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    /* Main content and sidebar should be full width on mobile */
-    .content, .sidebar {
-        width: 100%;
-        margin-bottom: 20px;
-    }
-
-    /* Make logs scrollable with max height */
-    .sidebar {
-        max-height: 400px;
-        overflow-y: auto;
-        border: none;
-    }
-
-    /* Make "Check for Updates" button span full width */
-    .check-updates-btn {
-        width: 100%;
-        margin-top: 10px;
-    }
-
-    /* Reduce padding and margin for mobile layout */
-    .logs {
-        margin-top: 0;
-        padding-left: 0;
-    }
-
-    li {
-        text-align: left;
-    }
-
     h1 {
-        font-size: 3em;
-        text-align: left;
+        font-size: 2em;
+        margin-top: 35px;
     }
 
-    /* Center text */
-    p {
-        text-align: center;
+    .site-footer {
+        font-size: 0.8em;
+    }
+
+    .content ul {
+        grid-template-columns: 1fr; /* Single column on mobile */
     }
 }
