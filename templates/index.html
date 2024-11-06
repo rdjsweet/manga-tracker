@@ -45,26 +45,27 @@
                 <ul>
                     {% for manga in manga_list %}
                         <li>
-                            <strong>{{ manga['title'] }}</strong><br> 
-                            Latest Chapter: {{ manga['latest_chapter_title'] }}<br>
-                            Total Chapters: {{ manga['chapter_count'] }}
-                            {% if manga['new_chapters_count'] > 0 %}
-                                <span class="new-chapters"># {{ manga['new_chapters_count'] }} new chapter(s)!</span>
+                            <strong>{{ manga.title }}</strong><br> 
+                            Latest Chapter: {{ manga.latest_chapter_title }}<br>
+                            Total Chapters: {{ manga.chapter_count }}
+                            {% if manga.new_chapters_count > 0 %}
+                                <span class="new-chapters"># {{ manga.new_chapters_count }} new chapter(s)!</span>
                             {% endif %} <br>
-                            <a href="{{ manga['url'] }}" target="_blank">Read on MangaPill</a> |
-                            <a href="{{ url_for('manga.delete_manga', id=manga['id']) }}">Delete</a>
+                            <a href="{{ manga.url }}" target="_blank">Read on MangaPill</a> |
+                            <a href="{{ url_for('manga.delete_manga', id=manga.id) }}">Delete</a>
                         </li>
                     {% endfor %}
                 </ul>
             </div>
 
+            <!-- Activity Log -->
             <div class="logs">
                 <h3>Activity Log</h3>
                 <ul>
                     {% for log in logs %}
-                        <li>{{ log['date_added'] }} - {{ log['manga_title'] }}
-                            {% if log['chapters_added'] > 0 %}
-                                : {{ log['chapters_added'] }} new chapter(s) added!
+                        <li>{{ log.date_added }} - {{ log.manga_title }}
+                            {% if log.chapters_added > 0 %}
+                                : {{ log.chapters_added }} new chapter(s) added!
                             {% endif %}
                         </li>
                     {% endfor %}

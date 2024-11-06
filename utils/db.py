@@ -1,10 +1,11 @@
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from config import config
+from flask_sqlalchemy import SQLAlchemy
+from config import Config
 
-def get_db_connection():
-    db_url = config.DATABASE_URL
-    if not db_url:
-        raise Exception("DATABASE_URL environment variable not set")
+# Create an instance of SQLAlchemy
+db = SQLAlchemy()
 
-    return psycopg2.connect(db_url, cursor_factory=RealDictCursor)
+def init_db(app):
+    # Load the configuration from the Config class
+    app.config.from_object(Config)
+    # Initialize SQLAlchemy with the Flask app
+    db.init_app(app)
