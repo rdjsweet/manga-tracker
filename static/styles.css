@@ -153,6 +153,10 @@ h1 {
     margin-top: 40px;
 }
 
+.logs li {
+    margin-bottom: 10px; /* Adds 10px space below each log item */
+}
+
 /* New chapter span styling */
 .new-chapters {
     color: #a94442; /* Dark red, matching error alert */
