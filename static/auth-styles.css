@@ -1,6 +1,6 @@
 /* General body styling */
 body {
-    background-color: #e0e0e0; /* Light grey background */
+    background-color: #e0e0e0;
     margin: 0;
     padding: 0;
     display: flex;
@@ -17,8 +17,8 @@ body {
     width: 90%;
     max-width: 450px;
     padding: 50px 30px;
-    border-radius: 16px; /* Softer rounded corners */
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); /* Subtle shadow for depth */
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
     text-align: center;
     box-sizing: border-box;
 }
@@ -26,7 +26,7 @@ body {
 /* Title styling */
 h1 {
     font-size: 2em;
-    color: #2c3e50; /* Darker grey-blue for the title */
+    color: #2c3e50;
     margin-bottom: 25px;
     font-weight: 600;
 }
@@ -44,18 +44,18 @@ h1 {
 }
 
 .alert-success {
-    background-color: #dff0d8; /* Light green background */
-    color: #3c763d; /* Dark green text */
+    background-color: #dff0d8;
+    color: #3c763d;
 }
 
 .alert-error {
-    background-color: #f2dede; /* Light red background */
-    color: #a94442; /* Dark red text */
+    background-color: #f2dede;
+    color: #a94442;
 }
 
 .alert-info {
-    background-color: #d9edf7; /* Light blue background */
-    color: #31708f; /* Dark blue text */
+    background-color: #d9edf7;
+    color: #31708f;
 }
 
 /* Input styling */
@@ -73,7 +73,7 @@ input[type="password"] {
 
 input[type="text"]:focus,
 input[type="password"]:focus {
-    border-color: #2c3e50; /* Matches the title color */
+    border-color: #2c3e50;
     outline: none;
 }
 
@@ -83,7 +83,7 @@ button {
     padding: 14px;
     font-size: 1.1em;
     font-weight: bold;
-    background-color: #3498db; /* Blue accent color */
+    background-color: #3498db;
     color: #ffffff;
     border: none;
     border-radius: 6px;
@@ -94,7 +94,7 @@ button {
 }
 
 button:hover {
-    background-color: #2980b9; /* Darker blue on hover */
+    background-color: #2980b9;
     transform: translateY(-1px);
 }
 
@@ -103,9 +103,24 @@ button:active {
     transform: translateY(0);
 }
 
+/* Disabled button styling */
+button:disabled {
+    background-color: #b0b0b0;
+    color: #ffffff;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Enabled button styling (when reCAPTCHA is completed) */
+button.enabled {
+    background-color: #3498db;
+    cursor: pointer;
+}
+
 /* Link styling */
 a {
-    color: #3498db; /* Matches button color */
+    color: #3498db;
     text-decoration: none;
     font-size: 1em;
 }
@@ -119,6 +134,12 @@ a:hover {
     font-size: 0.85em;
     color: #999999;
     margin-top: 20px;
+}
+
+.g-recaptcha {
+    margin: 15px 0;
+    display: flex;
+    justify-content: center;
 }
 
 /* Mobile responsive styling */

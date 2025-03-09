@@ -1,37 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>MangaPill Chapter Tracker - Register</title>
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='auth-styles.css') }}">
+
 </head>
+
 <body>
     <div class="wrap">
         <h1>Register</h1>
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div class="flashes">
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} flash-message">{{ message }}</div>
-                {% endfor %}
-            </div>
+        <div class="flashes">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} flash-message">{{ message }}</div>
+            {% endfor %}
+        </div>
         {% endif %}
         {% endwith %}
         <form method="POST">
             <label for="username">Username:</label>
-            <input type="text" name="username" required><br><br>
+            <input type="text" name="username" required><br>
 
             <label for="password">Password:</label>
-            <input type="password" name="password" required><br><br>
+            <input type="password" name="password" required><br>           
 
-            <button type="submit">Register</button>
+            <div class="g-recaptcha" 
+                data-sitekey="6LfiTe8qAAAAAOR33nwh7GAjSjpUSeh2Cde2_40V"
+                data-callback="enableSubmitButton">
+            </div>
+            <input type="submit" value="Submit">
+
+            <button type="submit" id="register-btn">Register</button>
         </form>
         <p>Already have an account? <a href="{{ url_for('auth.login') }}">Log in here</a>.</p>
         <footer class="site-footer">
-            &copy; 2024 Sweetsoft, Ryan Sweet. All Rights Reserved.
+            &copy; 2025 Sweetsoft, Ryan Sweet. All Rights Reserved.
         </footer>
     </div>
+
+    <script>
+        function enableSubmitButton() {
+            let button = document.getElementById("register-btn");
+            button.disabled = false;
+            button.classList.add("enabled");
+        }
+    
+        // Ensure the button starts disabled when the page loads
+        window.onload = function() {
+            document.getElementById("register-btn").disabled = true;
+        };
+    </script>
+    
 </body>
+
 </html>
