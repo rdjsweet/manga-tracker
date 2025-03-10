@@ -1,18 +1,16 @@
-import os
-import requests
 from dotenv import load_dotenv
 from flask import Blueprint, request, render_template, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required
 from models import User
 from utils.db import get_db_connection
+import requests
 import psycopg2
+from config import config
 from datetime import datetime
 
 
 load_dotenv()
-
-RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -23,7 +21,6 @@ def register():
         password = request.form.get('password')
         recaptcha_response = request.form.get("g-recaptcha-response")
 
-        # Verify reCAPTCHA
         recaptcha_verify_url = "https://www.google.com/recaptcha/api/siteverify"
         recaptcha_payload = {
             "secret": RECAPTCHA_SECRET_KEY,
@@ -32,7 +29,6 @@ def register():
         recaptcha_result = requests.post(recaptcha_verify_url, data=recaptcha_payload)
         recaptcha_data = recaptcha_result.json()
 
-        # If failed, block registration
         if not recaptcha_data.get("success"):
             flash("reCAPTCHA verification failed. Please try again.", "error")
             return redirect(url_for('auth.register'))

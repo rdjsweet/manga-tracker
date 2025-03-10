@@ -7,7 +7,6 @@ import pytz
 
 manga_bp = Blueprint('manga', __name__)
 
-# Define EST timezone
 est = pytz.timezone('America/New_York')
 
 def to_est(dt):
@@ -26,7 +25,6 @@ def index():
     )
     manga_list = cursor.fetchall()
 
-    # Convert last_checked timestamps to EST if available
     last_checked_values = [manga['last_checked'] for manga in manga_list if manga['last_checked']]
     if last_checked_values:
         max_last_checked = max(last_checked_values)
@@ -40,7 +38,6 @@ def index():
     )
     logs = cursor.fetchall()
 
-    # Convert log entry timestamps to EST
     formatted_logs = [
         {
             'manga_title': log['manga_title'],
@@ -82,7 +79,6 @@ def add_manga():
             connection.close()
             return redirect(url_for('manga.index'))
 
-        # Store UTC time, display as EST
         cursor.execute(
             'INSERT INTO manga (title, url, last_checked, chapter_count, latest_chapter_title, user_id) VALUES (%s, %s, %s, %s, %s, %s)',
             (title, url, datetime.now(pytz.utc), chapter_count, latest_chapter_title, current_user.id)
@@ -101,6 +97,8 @@ def check_updates():
     cursor.execute('SELECT * FROM manga WHERE user_id = %s', (current_user.id,))
     manga_list = cursor.fetchall()
 
+    total_new_chapters = 0
+    
     for manga in manga_list:
         url = manga['url']
         title, latest_chapter_title, chapter_count = scrape_manga_details(url)
@@ -108,6 +106,7 @@ def check_updates():
         if title is not None and latest_chapter_title is not None and chapter_count is not None:
             previous_count = manga['chapter_count']
             new_chapters = max(0, chapter_count - previous_count)
+            total_new_chapters += new_chapters 
             cursor.execute(
                 'UPDATE manga SET latest_chapter_title = %s, chapter_count = %s, last_checked = %s, new_chapters_count = %s WHERE id = %s AND user_id = %s',
                 (latest_chapter_title, chapter_count, datetime.now(pytz.utc), new_chapters, manga['id'], current_user.id)
@@ -121,7 +120,7 @@ def check_updates():
     connection.commit()
     cursor.close()
     connection.close()
-    flash('Update check complete!', 'info')
+    flash(f'Update check complete! {total_new_chapters} update(s) found.', 'info')
     return redirect(url_for('manga.index'))
 
 @manga_bp.route('/delete/<int:id>')

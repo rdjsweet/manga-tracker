@@ -1,19 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers:wght@400;700&display=swap" rel="stylesheet">
+
     <title>MangaPill Chapter Tracker - Home</title>
 </head>
+
 <body>
     <div class="wrap">
         <a href="{{ url_for('auth.logout') }}" class="logout-btn">Log Out</a>
-        
-        <h1>MangaPill Chapter Tracker</h1>
-
+        <div class="title">
+            <img src="../static/images/ryangit.png">
+            <h1>MangaPill Chapter Tracker</h1>
+        </div>
         <div class="container">
-            <!-- Main Content -->
+
             <div class="content">
                 <p>Paste URL from <u><strong>Manga Chapter List</strong></u> Below to Add</p>
                 <form action="{{ url_for('manga.add_manga') }}" method="POST" class="form-inline">
@@ -22,58 +27,62 @@
                 </form>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        <div class="flashes">
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }} flash-message">{{ message }}</div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+                {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
                 {% endwith %}
-            
-
-                <br>
-
-                <!-- Button to Check for Updates -->
+                
                 <form action="{{ url_for('manga.check_updates') }}" method="post">
                     <button type="submit" class="check-updates-btn">Check for Updates</button>
-                </form>                
+                </form>
                 <br>
                 <p>Last Checked: {{ last_checked }}</p>
-
-                <!-- List of Mangas -->
-                <ul>
-                    {% for manga in manga_list %}
+            </div>
+            <div class="scrollables">
+                
+                <div class="scroll-box-manga">
+                    <h2>Manga List</h2>
+                    <ul>
+                        {% for manga in manga_list %}
                         <li>
-                            <strong>{{ manga['title'] }}</strong><br> 
+                            <strong>{{ manga['title'] }}</strong><br>
                             Latest Chapter: {{ manga['latest_chapter_title'] }}<br>
                             Total Chapters: {{ manga['chapter_count'] }}
                             {% if manga['new_chapters_count'] > 0 %}
-                                <span class="new-chapters"># {{ manga['new_chapters_count'] }} new chapter(s)!</span>
+                            <span class="new-chapters"># {{ manga['new_chapters_count'] }} new chapter(s)!</span>
                             {% endif %} <br>
                             <a href="{{ manga['url'] }}" target="_blank">Read on MangaPill</a> |
                             <a href="{{ url_for('manga.delete_manga', id=manga['id']) }}">Delete</a>
                         </li>
-                    {% endfor %}
-                </ul>
-            </div>
-
-            <div class="logs">
-                <h3>Activity Log</h3>
-                <ul>
-                    {% for log in logs %}
-                        <li>{{ log['date_added'] }} - <strong>{{ log['manga_title'] }}</strong>
-                            {% if log['chapters_added'] > 0 %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <div class="scroll-box-logs">
+                    <div class="logs">
+                        <h2>Activity Log</h2>
+                        <ul>
+                            {% for log in logs %}
+                            <li>{{ log['date_added'] }} <br>
+                                <strong>{{ log['manga_title'] }}</strong>
+                                {% if log['chapters_added'] > 0 %}
                                 : {{ log['chapters_added'] }} new chapter(s) added!
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>                
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
-        <footer class="site-footer">
-            &copy; 2024 SweetSoft, Ryan Sweet. All Rights Reserved.
-        </footer>
-    </div>
 </body>
+
+<footer class="site-footer">
+    &copy; 2025 SweetSoft, Ryan Sweet. All Rights Reserved.
+</footer>
+
 </html>
