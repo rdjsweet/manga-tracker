@@ -82,7 +82,7 @@ def login():
                 cursor.close()
 
             connection.close()
-            flash('Login successful! Let\'s get read some manga!', 'success')
+            flash('Login successful! Let\'s read some manga!', 'success')
             return redirect(url_for('manga.index'))
         else:
             connection.close()
