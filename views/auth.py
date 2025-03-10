@@ -23,7 +23,7 @@ def register():
 
         recaptcha_verify_url = "https://www.google.com/recaptcha/api/siteverify"
         recaptcha_payload = {
-            "secret": RECAPTCHA_SECRET_KEY,
+            "secret": config.RECAPTCHA_SECRET_KEY,
             "response": recaptcha_response
         }
         recaptcha_result = requests.post(recaptcha_verify_url, data=recaptcha_payload)
