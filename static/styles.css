@@ -98,13 +98,16 @@ body {
 }
 
 .scroll-box-manga li {
-    background-color: #fff;
+    background-color: #ffffff;
     padding: 15px;
     width: 100%;
     border-radius: 8px;
     border: 1px solid #ccc;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
+}
+.scroll-box-manga li.updated-chapters {
+    background-color: #d8f6d6;
 }
 
 .scroll-box-logs {

@@ -35,7 +35,7 @@
                 </div>
                 {% endif %}
                 {% endwith %}
-                
+
                 <form action="{{ url_for('manga.check_updates') }}" method="post">
                     <button type="submit" class="check-updates-btn">Check for Updates</button>
                 </form>
@@ -43,25 +43,33 @@
                 <p>Last Checked: {{ last_checked }}</p>
             </div>
             <div class="scrollables">
-                
+
                 <div class="scroll-box-manga">
                     <h2>Manga List</h2>
                     <ul>
                         {% for manga in manga_list %}
-                        <li>
-                            <strong>{{ manga['title'] }}</strong><br>
-                            Latest Chapter: {{ manga['latest_chapter_title'] }}<br>
-                            Total Chapters: {{ manga['chapter_count'] }}
                             {% if manga['new_chapters_count'] > 0 %}
-                            <span class="new-chapters"># {{ manga['new_chapters_count'] }} new chapter(s)!</span>
-                            {% endif %} <br>
-                            <a href="{{ manga['url'] }}" target="_blank">Read on MangaPill</a> |
-                            <a href="{{ url_for('manga.delete_manga', id=manga['id']) }}">Delete</a>
-                        </li>
+                                <li class="updated-chapters">
+                                    <strong>{{ manga['title'] }}</strong><br>
+                                    Latest Chapter: {{ manga['latest_chapter_title'] }}<br>
+                                    Total Chapters: {{ manga['chapter_count'] }}
+                                    <span class="new-chapters"># {{ manga['new_chapters_count'] }} new chapter(s)!</span><br>
+                                    <a href="{{ manga['url'] }}" target="_blank">Read on MangaPill</a> |
+                                    <a href="{{ url_for('manga.delete_manga', id=manga['id']) }}">Delete</a>
+                                </li>
+                            {% else %}
+                                <li>
+                                    <strong>{{ manga['title'] }}</strong><br>
+                                    Latest Chapter: {{ manga['latest_chapter_title'] }}<br>
+                                    Total Chapters: {{ manga['chapter_count'] }}<br>
+                                    <a href="{{ manga['url'] }}" target="_blank">Read on MangaPill</a> |
+                                    <a href="{{ url_for('manga.delete_manga', id=manga['id']) }}">Delete</a>
+                                </li>
+                            {% endif %}
                         {% endfor %}
                     </ul>
-                </div>
-                
+                </div>                
+
                 <div class="scroll-box-logs">
                     <div class="logs">
                         <h2>Activity Log</h2>
