@@ -2,12 +2,10 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-# Function to scrape the chapter count from the given URL
 def scrape_manga_details(url):
     try:
-        #Send a GET request to the URL
         response = requests.get(url)
-        response.raise_for_status() # This will raise an HTTPError if the response is not 200
+        response.raise_for_status()
         
         soup = BeautifulSoup(response.content, 'html.parser')
         
@@ -40,7 +38,7 @@ def scrape_manga_details(url):
     
     
 if __name__ == "__main__":
-    manga_url = "https://www.mangapill.com/manga/8/kingdom"  # Replace with an actual manga URL from MangaPill
+    manga_url = "https://www.mangapill.com/manga/8/kingdom"
     chapter_count = scrape_manga_details(manga_url)
     if chapter_count is not None:
         print(f"The current chapter count for the manga is: {chapter_count}")
