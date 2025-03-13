@@ -4,7 +4,6 @@ from utils.db import get_db_connection
 from scraper import scrape_manga_details
 from datetime import datetime
 import pytz
-import json
 
 manga_bp = Blueprint("manga", __name__)
 
@@ -50,12 +49,10 @@ def index():
         )
         manga["chapters"] = cursor.fetchall()
 
-    # 🔥 Retrieve `new_chapters_dict` from session (removes it from session after use)
     new_chapters_dict = session.pop("new_chapters_dict", {})
 
-    # Attach new chapters count dynamically
     for manga in manga_list:
-        manga["new_chapters_count"] = int(new_chapters_dict.get(str(manga["id"]), 0))  # Convert to int
+        manga["new_chapters_count"] = int(new_chapters_dict.get(str(manga["id"]), 0))
 
     last_checked_values = [
         manga["last_checked"] for manga in manga_list if manga["last_checked"]
@@ -107,14 +104,13 @@ def check_updates():
         title, chapter_titles, chapter_urls, chapter_count = scrape_manga_details(url)
 
         if title is not None and chapter_count is not None:
-            # Ensure we safely fetch previous chapter count
             cursor.execute("SELECT COUNT(*) AS count FROM chapters WHERE manga_id = %s", (manga["id"],))
             row = cursor.fetchone()
-            previous_count = row["count"] if row and "count" in row else 0  # ✅ Uses dictionary key safely
+            previous_count = row["count"] if row and "count" in row else 0
 
 
             new_chapters = max(0, chapter_count - previous_count)
-            new_chapters_dict[str(manga["id"])] = new_chapters  # Store as string key
+            new_chapters_dict[str(manga["id"])] = new_chapters
             total_new_chapters += new_chapters
 
             cursor.execute(
@@ -150,7 +146,7 @@ def check_updates():
     connection.close()
 
     flash(f"Update check complete! {total_new_chapters} update(s) found.", "info")
-    session["new_chapters_dict"] = new_chapters_dict  # Store safely in session
+    session["new_chapters_dict"] = new_chapters_dict
     return redirect(url_for("manga.index"))
 
 

@@ -52,7 +52,6 @@
                                 <strong>{{ manga['title'] }}</strong><br>
                                 Latest Chapter: {{ manga['latest_chapter_title'] }}<br>
                 
-                                <!-- Chapter Dropdown -->
                                 <label for="chapter_select_{{ manga['id'] }}">Read Chapter:</label>
                                 <select id="chapter_select_{{ manga['id'] }}" name="chapter"
                                         onchange="updateChapterLink({{ manga['id'] }})">
@@ -63,12 +62,10 @@
                                     {% endfor %}
                                 </select><br>
                 
-                                <!-- Show new chapters only if there are updates -->
                                 {% if manga['new_chapters_count'] > 0 %}
                                     <span class="new-chapters"># {{ manga['new_chapters_count'] }} new chapter(s)!</span><br>
                                 {% endif %}
                 
-                                <!-- Dynamic Chapter Link -->
                                 <a id="read_link_{{ manga['id'] }}" href="#" target="_blank">
                                     Read on MangaPill
                                 </a> |
