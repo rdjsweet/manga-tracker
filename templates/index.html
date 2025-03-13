@@ -42,33 +42,42 @@
                 <br>
                 <p>Last Checked: {{ last_checked }}</p>
             </div>
-            <div class="scrollables">
 
+            <div class="scrollables">
                 <div class="scroll-box-manga">
                     <h2>Manga List</h2>
                     <ul>
                         {% for manga in manga_list %}
-                            {% if manga['new_chapters_count'] > 0 %}
-                                <li class="updated-chapters">
-                                    <strong>{{ manga['title'] }}</strong><br>
-                                    Latest Chapter: {{ manga['latest_chapter_title'] }}<br>
-                                    Total Chapters: {{ manga['chapter_count'] }}
+                            <li class="{% if manga['new_chapters_count'] > 0 %}updated-chapters{% endif %}">
+                                <strong>{{ manga['title'] }}</strong><br>
+                                Latest Chapter: {{ manga['latest_chapter_title'] }}<br>
+                
+                                <!-- Chapter Dropdown -->
+                                <label for="chapter_select_{{ manga['id'] }}">Read Chapter:</label>
+                                <select id="chapter_select_{{ manga['id'] }}" name="chapter"
+                                        onchange="updateChapterLink({{ manga['id'] }})">
+                                    {% for chapter in manga['chapters'] %}
+                                        <option value="{{ chapter['url'] }}" {% if loop.first %}selected{% endif %}>
+                                            {{ chapter['chapter_title'] }}
+                                        </option>
+                                    {% endfor %}
+                                </select><br>
+                
+                                <!-- Show new chapters only if there are updates -->
+                                {% if manga['new_chapters_count'] > 0 %}
                                     <span class="new-chapters"># {{ manga['new_chapters_count'] }} new chapter(s)!</span><br>
-                                    <a href="{{ manga['url'] }}" target="_blank">Read on MangaPill</a> |
-                                    <a href="{{ url_for('manga.delete_manga', id=manga['id']) }}">Delete</a>
-                                </li>
-                            {% else %}
-                                <li>
-                                    <strong>{{ manga['title'] }}</strong><br>
-                                    Latest Chapter: {{ manga['latest_chapter_title'] }}<br>
-                                    Total Chapters: {{ manga['chapter_count'] }}<br>
-                                    <a href="{{ manga['url'] }}" target="_blank">Read on MangaPill</a> |
-                                    <a href="{{ url_for('manga.delete_manga', id=manga['id']) }}">Delete</a>
-                                </li>
-                            {% endif %}
+                                {% endif %}
+                
+                                <!-- Dynamic Chapter Link -->
+                                <a id="read_link_{{ manga['id'] }}" href="#" target="_blank">
+                                    Read on MangaPill
+                                </a> |
+                                <a href="{{ url_for('manga.delete_manga', id=manga['id']) }}">Delete</a>
+                            </li>
                         {% endfor %}
                     </ul>
                 </div>                
+
 
                 <div class="scroll-box-logs">
                     <div class="logs">
@@ -92,5 +101,21 @@
 <footer class="site-footer">
     &copy; 2025 SweetSoft, Ryan Sweet. All Rights Reserved.
 </footer>
+
+<script>
+    function updateChapterLink(mangaId) {
+        let selectElement = document.getElementById(`chapter_select_${mangaId}`);
+        let selectedUrl = selectElement.value;
+
+        let linkElement = document.getElementById(`read_link_${mangaId}`);
+        linkElement.href = selectedUrl;
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        {% for manga in manga_list %}
+            updateChapterLink({{ manga['id'] }});
+        {% endfor %}
+    });
+</script>
 
 </html>
