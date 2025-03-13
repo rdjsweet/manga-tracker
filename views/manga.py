@@ -14,11 +14,6 @@ def to_est(dt):
     """Convert a UTC datetime to EST."""
     return dt.replace(tzinfo=pytz.utc).astimezone(est)
 
-
-from flask import request
-
-from flask import session
-
 @manga_bp.route("/")
 @login_required
 def index():
@@ -150,7 +145,6 @@ def check_updates():
     return redirect(url_for("manga.index"))
 
 
-
 @manga_bp.route("/add", methods=["POST"])
 @login_required
 def add_manga():
@@ -207,7 +201,6 @@ def add_manga():
         return redirect(url_for("manga.index"))
 
 
-
 @manga_bp.route("/delete/<int:id>")
 @login_required
 def delete_manga(id):
@@ -221,8 +214,6 @@ def delete_manga(id):
     connection.close()
     flash("Manga deleted successfully.", "info")
     return redirect(url_for("manga.index"))
-
-
 
 
 @manga_bp.route("/select_chapter/<int:manga_id>")

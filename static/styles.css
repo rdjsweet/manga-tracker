@@ -232,8 +232,8 @@ select {
     border: 1px solid #ccc;
     border-radius: 8px;
     box-sizing: border-box;
-    width: 12vw;
-    height: 4vh;
+    width: 10vw;
+    height: 3vh;
 }
 
 .check-updates-btn {
@@ -377,6 +377,6 @@ select {
     }
 
     select {
-        width: 20vw;
+        width: 22vw;
     }
 }
