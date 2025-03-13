@@ -22,6 +22,13 @@ body {
     position: relative;
 }
 
+button.check-updates-btn {
+    font-family: 'Bangers', sans-serif;
+    font-weight: 200;
+    font-size: x-large;
+    padding: 1vh;
+}
+
 .wrap p {
     text-align: center;
     font-size: 1.1em;
@@ -89,11 +96,14 @@ body {
     margin: 0;
     text-align: center;
     background-color: #f9f9f9;
-    padding: .5vh 0;
+    padding: 0;
     margin-bottom: 1vw;
     border-bottom: solid 2px #ccc;
     width: 100%;
-    z-index: 2;
+    z-index: 1;
+    font-family: 'Bangers', sans-serif;
+    font-weight: 200;
+    font-size: xx-large;
 }
 
 .scroll-box-manga ul {
@@ -113,6 +123,21 @@ body {
     border: 1px solid #ccc;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
+}
+
+strong {
+    font-family: 'Bangers', sans-serif;
+    font-weight: 100;
+    font-size: 1.3em;
+}
+
+.scroll-box-logs strong {
+    font-size: 1.1em;
+}
+
+.scroll-box-manga li a {
+    display: block;
+    margin-top: .7vh;
 }
 
 .scroll-box-manga li.updated-chapters {
@@ -143,7 +168,10 @@ body {
     margin-bottom: 1vw;
     border-bottom: solid 2px #ccc;
     width: 100%;
-    z-index: 2;
+    z-index: 1;
+    font-family: 'Bangers', sans-serif;
+    font-weight: 200;
+    font-size: xx-large;
 }
 
 .logs ul {
@@ -177,7 +205,7 @@ body {
     right: 20px;
     background-color: #f44336;
     color: white;
-    padding: 10px 20px;
+    padding: 10px;
     font-size: 1em;
     text-decoration: none;
     border-radius: 5px;
@@ -185,6 +213,9 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: background-color 0.3s;
     z-index: 10;
+    font-family: 'Bangers', sans-serif;
+    font-weight: 200;
+    font-size: larger;
 }
 
 .logout-btn:hover {
@@ -211,8 +242,10 @@ body {
 }
 
 .form-inline button {
-    padding: 12px;
-    font-size: 1em;
+    width: 10vw;
+    padding-bottom: 2vh;
+    padding-top: 1vh;
+    max-height: 5vh;
     font-weight: bold;
     background-color: #3498db;
     color: white;
@@ -220,7 +253,9 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s;
-    height: 100%;
+    font-family: 'Bangers', sans-serif;
+    font-weight: 100;
+    font-size: x-large;
 }
 
 .form-inline button:hover {
@@ -297,7 +332,68 @@ select {
     margin-top: 2vh;
 }
 
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+    margin: 0;
+    padding: 0;
+    font-size: 1.5em;
+    color: #333;
+    font-family: 'Bangers', sans-serif;
+    font-size: xx-large;
+    font-weight: 300;
+}
+
+.modal-content button {
+    background-color: #f44336;
+    color: white;
+    margin: 1vw;
+    width: 9vw;
+    height: 5vh;
+    font-size: 1em;
+    text-decoration: none;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s;
+}
+
+.close {
+    position: absolute;
+    right: 10px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
 @media (max-width: 768px) {
+
+    .form-inline button {
+        width: 20vw;
+        padding: 1vh;
+    }
+
     .title {
         display: flex;
         align-items: center;
