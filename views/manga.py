@@ -131,10 +131,15 @@ def check_updates():
                 range(1, len(chapter_titles) + 1), chapter_titles, chapter_urls
             ):
                 if chapter_number not in existing_chapter_numbers:
-                    cursor.execute(
-                        "INSERT INTO chapters (manga_id, chapter_number, chapter_title, url) VALUES (%s, %s, %s, %s)",
-                        (manga_id, chapter_number, chapter_title, chapter_url),
-                    )
+                    try:
+                        cursor.execute(
+                            "INSERT INTO chapters (manga_id, chapter_number, chapter_title, url) VALUES (%s, %s, %s, %s)",
+                            (manga_id, chapter_number, chapter_title, chapter_url),
+                        )
+                    except Exception as e:
+                        flash(f"Error adding chapter {chapter_number}: {str(e)}", "error")
+
+
 
     connection.commit()
     cursor.close()
