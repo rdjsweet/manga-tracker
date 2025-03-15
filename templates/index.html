@@ -37,7 +37,7 @@
                 {% endwith %}
 
                 <form action="{{ url_for('manga.check_updates') }}" method="post">
-                    <button type="submit" class="check-updates-btn">Check for Updates</button>
+                    <button type="submit" class="check-updates-btn" onClick="changeText(this)">Check for Updates</button>
                 </form>
                 <br>
                 <p>Last Checked: {{ last_checked }}</p>
@@ -141,7 +141,10 @@
         document.getElementById("deleteModal").style.display = "none";
     }
 
-    // Close modal when clicking outside of it
+    function changeText(button) {
+        button.innerText = "Checking for updates..."
+    }
+
     window.onclick = function (event) {
         let modal = document.getElementById("deleteModal");
         if (event.target == modal) {
