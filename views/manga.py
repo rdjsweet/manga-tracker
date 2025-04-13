@@ -23,7 +23,7 @@ def index():
         (SELECT chapter_title 
             FROM chapters 
             WHERE chapters.manga_id = m.id 
-            ORDER BY created_at DESC 
+            ORDER BY url DESC 
             LIMIT 1) AS latest_chapter_title
         FROM manga AS m
         WHERE m.user_id = %s
