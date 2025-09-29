@@ -148,10 +148,6 @@ button:hover { background: #ffa726; }
 
 li input[type="checkbox"] { margin-right: 12px; accent-color: #ff9800; }
 
-.footer-stamp {
-  display: none;
-}
-
 /* Tablet */
 @media (max-width: 1024px) {
   .container {
@@ -231,17 +227,5 @@ li input[type="checkbox"] { margin-right: 12px; accent-color: #ff9800; }
   button {
     padding: 10px 18px;
     font-size: 1rem;
-  }
-
-  .footer-stamp {
-    display: block;
-    position: fixed;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 75px;          /* adjust size if needed */
-    opacity: 0.9;
-    pointer-events: none; /* never blocks taps */
-    z-index: 10;
   }
 }
