@@ -387,6 +387,28 @@ select {
     cursor: pointer;
 }
 
+.quick-links {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+
+.quick-links a {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(73,73,73,0.85);
+  color: #ff9800;
+  text-decoration: none;
+  font-weight: 700;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.quick-links a:hover {
+  background: rgba(255,152,0,0.2);
+  opacity: 1;
+}
+
 @media (max-width: 768px) {
 
     .form-inline button {
@@ -475,4 +497,12 @@ select {
     select {
         width: 34vw;
     }
+
+    .quick-links {
+     margin: 6px 0 12px;
+   }
+   .quick-links a {
+     padding: 6px 8px;
+     font-weight: 600;
+   }
 }

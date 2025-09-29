@@ -17,6 +17,13 @@
             <img src="../static/images/ryangit.png">
             <h1>MangaPill Chapter Tracker</h1>
         </div>
+
+         {% if current_user.is_authenticated and current_user.username in ["sarahsweet", "rdjsweet"] %}
+        <nav class="quick-links">
+            <a href="{{ url_for('halloween.index') }}">🎃 Halloween</a>
+        </nav>
+        {% endif %}
+        
         <div class="container">
 
             <div class="content">

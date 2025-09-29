@@ -5,6 +5,13 @@ import random
 
 halloween_bp = Blueprint("halloween", __name__, url_prefix="/halloween")
 
+@halloween_bp.before_request
+def restrict_halloween():
+    allowed = ["sarahsweet", "rdjsweet"]
+    if not (current_user.is_authenticated and current_user.username in allowed):
+        abort(403)
+
+        
 @halloween_bp.route("/")
 @login_required
 def index():
