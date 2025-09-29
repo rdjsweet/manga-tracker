@@ -1,0 +1,247 @@
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: url("images/burnsie.jpg") no-repeat center center fixed;
+  background-size: cover;
+  color: #f5f5f5;
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+h1 {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 12px;          /* tighter space above the topbar */
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 40px;
+  margin: 16px auto 40px;       /* smaller top margin to pull topbar up */
+  max-width: 1100px;
+  width: 90%;
+
+  flex: 1;
+  align-content: center;
+}
+
+/* top header block (spans both columns) */
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;      /* center contents vertically */
+  gap: 14px;                    /* a little more breathing room */
+  min-height: 180px;            /* prevent “squished” look */
+  padding: 16px;                /* more interior padding */
+
+  background: rgba(73, 73, 73, 0.85);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+.left-panel {
+  grid-column: 1;
+  background: rgba(73, 73, 73, 0.85);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+.right-panel {
+  grid-column: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(73, 73, 73, 0.85);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+.random-movie {
+  text-align: center;
+  font-size: 1.3rem;
+  color: #ff9800;
+  margin: 0;
+}
+
+.add-form,
+.topbar form {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+input[type="text"] {
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  font-size: 1rem;
+  width: 220px;
+}
+
+button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background: #ff9800;
+  color: #181818;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover { background: #ffa726; }
+
+/* MOVIE LIST */
+.movie-list {
+  max-height: 520px;
+  overflow: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.movie-list li {
+  display: flex;
+  align-items: center;              /* vertical centering for checkbox/text/delete */
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #2b2b2b;
+  background: #232323;
+  border-radius: 8px;
+}
+.movie-list li label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.movie-list input[type="checkbox"] { flex-shrink: 0; }
+.movie-list li.watched label { text-decoration: line-through; opacity: 0.7; }
+.movie-list .delete {
+  text-decoration: none;
+  font-weight: bold;
+  opacity: 0.5;
+  color: #f5f5f5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.movie-list .delete:hover { opacity: 1; }
+.movie-list .empty { opacity: 0.7; font-style: italic; }
+
+li input[type="checkbox"] { margin-right: 12px; accent-color: #ff9800; }
+
+.footer-stamp {
+  display: none;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 24px;
+    align-content: center;
+  }
+  .left-panel, .right-panel { grid-column: 1; }
+  .topbar { min-height: 150px; }
+}
+
+/* Mobile */
+@media (max-width: 800px) {
+  body {
+    background: url("images/otgw-bg-mobile.png") no-repeat center center fixed;
+    background-size: cover;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    margin-top: 8px;
+    margin-bottom: 6px;          /* tighter under the title on mobile too */
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    margin-top: 8px;
+    margin-bottom: 6px;
+  }
+
+  .container {
+    margin: 8px auto 16px;
+    gap: 12px;
+    width: 95%;
+    align-content: start;   /* stop stretching + centering the grid */
+  }
+
+  .topbar,
+  .left-panel,
+  .right-panel {
+    background: rgba(73, 73, 73, 0.85);
+    padding: 12px;
+  }
+
+  .random-movie { margin: 0; font-size: 1.1rem; }
+  .topbar { gap: 8px; min-height: 130px; }  /* a touch taller + more gap on mobile */
+
+  .movie-list { max-height: 28vh; }
+  .movie-list li { padding: 6px 10px; margin-bottom: 6px; }
+
+  .movie-list input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+  }
+
+  .movie-list .delete {
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+    border-radius: 6px;
+    opacity: 0.7;
+    transition: background 0.2s, opacity 0.2s;
+  }
+
+  .movie-list .delete:hover {
+    background: rgba(255,255,255,0.1);
+    opacity: 1;
+  }
+
+  input[type="text"] {
+    width: 200px;
+    padding: 10px;
+    font-size: 1rem;
+  }
+
+  button {
+    padding: 10px 18px;
+    font-size: 1rem;
+  }
+
+  .footer-stamp {
+    display: block;
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 75px;          /* adjust size if needed */
+    opacity: 0.9;
+    pointer-events: none; /* never blocks taps */
+    z-index: 10;
+  }
+}

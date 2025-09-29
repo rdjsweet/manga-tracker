@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sweet 'n' Spooky</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='halloween.css') }}">
+</head>
+<body>
+  <h1>Sweet 'n' Spooky</h1>
+
+  <div class="container">
+    <!-- TOP BAR spans both columns -->
+    <div class="topbar">
+      <div class="random-movie">
+        {% if random_movie %}
+          <h2>Random Pick: {{ random_movie.title }}</h2>
+          <form method="GET" action="{{ url_for('halloween.index') }}">
+            <button type="submit">Pick Another</button>
+          </form>
+        {% else %}
+          <h2>No unwatched movies left!</h2>
+        {% endif %}
+      </div>
+
+      <form action="{{ url_for('halloween.add_movie') }}" method="POST" class="add-form">
+        <input type="text" name="title" placeholder="Add a movie" required>
+        <button type="submit">Add</button>
+      </form>
+    </div>
+
+    <!-- LEFT COLUMN: scrollable list -->
+    <div class="left-panel">
+      <ul class="movie-list">
+        {% for m in movies %}
+          <li class="{{ 'watched' if m.watched else '' }}">
+            <label>
+              <input
+                type="checkbox"
+                class="watched-checkbox"
+                data-id="{{ m.id }}"
+                {% if m.watched %}checked{% endif %}
+              >
+              {{ m.title }}
+            </label>
+            <a class="delete" href="{{ url_for('halloween.delete_movie', id=m.id) }}" title="Delete">×</a>
+          </li>
+        {% else %}
+          <li class="empty">No movies yet. Add one above.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- RIGHT COLUMN: image -->
+    <div class="right-panel">
+      <img src="{{ url_for('static', filename='images/suk.jpg') }}" alt="Halloween Cat">
+    </div>
+
+    <img
+        class="footer-stamp"
+        src="{{ url_for('static', filename='images/ryangit.png') }}"
+        alt="footer badge"
+        width="75"
+    />
+  </div>
+
+  <script>
+  document.querySelectorAll('.watched-checkbox').forEach(function(checkbox) {
+    checkbox.addEventListener('change', function() {
+      const li = this.closest('li');
+      const movieId = this.getAttribute('data-id');
+      const watched = this.checked;
+
+      fetch(`/halloween/update/${movieId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ watched })
+      }).then(res => {
+        if (res.ok) {
+          li.classList.toggle('watched', watched);
+        } else {
+          this.checked = !watched; // revert
+          alert('Failed to update. Try again.');
+        }
+      }).catch(() => {
+        this.checked = !watched; // revert
+        alert('Network error. Try again.');
+      });
+    });
+  });
+  </script>
+</body>
+</html>

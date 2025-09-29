@@ -3,6 +3,7 @@ from config import config
 from flask_login import LoginManager
 from views.auth import auth_bp
 from views.manga import manga_bp
+from views.halloween import halloween_bp
 from models import User
 from utils.db import get_db_connection
 
@@ -29,6 +30,7 @@ def load_user(user_id):
 # Register Blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(manga_bp)
+app.register_blueprint(halloween_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)
