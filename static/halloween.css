@@ -1,6 +1,6 @@
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
-  background: url("images/burnsie.jpg") no-repeat center center fixed;
+  background: #000 url("images/burnsie.jpg") no-repeat center center fixed;
   background-size: cover;
   color: #f5f5f5;
   margin: 0;
@@ -163,9 +163,9 @@ li input[type="checkbox"] { margin-right: 12px; accent-color: #ff9800; }
 /* Mobile */
 @media (max-width: 800px) {
   body {
-    background: url("images/otgw-bg-mobile.png") no-repeat center center fixed;
+    background: #000 url("images/otgw-bg-mobile.png") no-repeat center center fixed;
     background-size: cover;
-  }
+}
 
   h1 {
     font-size: 1.8rem;
