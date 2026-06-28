@@ -91,12 +91,14 @@ function renderMangaCard(manga) {
     : `Caught up · ${escapeHtml(manga.latest_chapter_title || 'N/A')}`;
 
   const action = manga.continue_url
-    ? `<button class="btn-continue" type="button" data-url="${escapeHtml(manga.continue_url)}"
-         title="Next: ${escapeHtml(manga.continue_title || '')}" onclick="continueReading(this)">Continue ▸</button>`
+    ? `<a class="btn-continue" href="${escapeHtml(manga.continue_url)}" target="_blank" rel="noopener noreferrer"
+         data-manga-id="${id}" data-url="${escapeHtml(manga.continue_url)}"
+         title="Next: ${escapeHtml(manga.continue_title || '')}" onclick="markReadFromContinue(this)">Continue ▸</a>`
     : `<span class="btn-continue caught-up">Caught up</span>`;
 
-  const options = manga.chapters
-    .map((ch) => `<option value="${escapeHtml(ch.url)}">${escapeHtml(ch.chapter_title)}</option>`)
+  const chapterLinks = manga.chapters
+    .map((ch) => `<a href="${escapeHtml(ch.url)}" target="_blank" rel="noopener noreferrer"
+         onclick="this.closest('details').open = false">${escapeHtml(ch.chapter_title)}</a>`)
     .join('');
 
   card.innerHTML = `
@@ -113,11 +115,10 @@ function renderMangaCard(manga) {
       <p class="progress">${progress}</p>
       <div class="card-actions">
         ${action}
-        <select class="menu" aria-label="Jump to a chapter of ${escapeHtml(manga.title)}"
-          onchange="jumpToChapter(this)">
-          <option value="" disabled selected>⋯</option>
-          ${options}
-        </select>
+        <details class="chapter-menu">
+          <summary class="menu" title="All chapters" aria-label="All chapters of ${escapeHtml(manga.title)}">⋯</summary>
+          <div class="chapter-panel">${chapterLinks}</div>
+        </details>
       </div>
     </div>`;
 
@@ -185,51 +186,24 @@ async function markRead(mangaId, chapterUrl) {
   }
 }
 
-/* Touch devices (notably iOS Safari) cannot open a new tab from a <select>
-   change — there's no user activation left once the picker is dismissed — so
-   we navigate the current tab there (the back button returns to the tracker)
-   and only open a new tab on desktop where it works reliably. */
-function isTouch() {
-  return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-}
-
-function openChapter(url) {
-  if (!url) return;
-  if (isTouch()) {
-    window.location.href = url;
-    return;
-  }
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
-async function continueReading(btn) {
-  const url = btn.dataset.url;
-  const card = btn.closest('.card');
-  const id = card ? card.dataset.mangaId : null;
-  if (isTouch()) {
-    // Record progress before we navigate away, or the request gets cut off.
-    if (id && url) await markRead(id, url);
-    if (url) window.location.href = url;
-    return;
-  }
-  openChapter(url);
+/* "Continue" is a real <a target="_blank"> so the tap opens a new tab reliably
+   on every platform (iOS Safari included — a direct anchor tap is a user
+   gesture, unlike a programmatic open). The new tab leaves this page alive, so
+   we record progress in the background without blocking or being cut off.
+   The chapter menu links are pure navigation and never touch read progress. */
+function markReadFromContinue(anchor) {
+  const id = anchor.dataset.mangaId;
+  const url = anchor.dataset.url;
   if (id && url) markRead(id, url);
+  // Do not preventDefault — let the anchor open the chapter in a new tab.
 }
 
-/* The chapter menu is pure navigation: it opens any chapter without touching
-   read progress, so jumping back to re-read an old chapter never rewinds your
-   position and re-flags newer chapters as unread. "Continue" is what advances
-   progress. */
-function jumpToChapter(select) {
-  openChapter(select.value);
-  select.selectedIndex = 0;
-}
+/* Close any open chapter menu when clicking/tapping elsewhere. */
+document.addEventListener('click', (e) => {
+  document.querySelectorAll('details.chapter-menu[open]').forEach((d) => {
+    if (!d.contains(e.target)) d.open = false;
+  });
+});
 
 /* =======================================================
    Summary banner

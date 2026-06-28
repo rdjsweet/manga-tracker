@@ -107,18 +107,23 @@
                     </p>
                     <div class="card-actions">
                         {% if manga['continue_url'] %}
-                        <button class="btn-continue" type="button" data-url="{{ manga['continue_url'] }}"
-                            title="Next: {{ manga['continue_title'] }}" onclick="continueReading(this)">Continue ▸</button>
+                        <a class="btn-continue" href="{{ manga['continue_url'] }}" target="_blank"
+                            rel="noopener noreferrer" data-manga-id="{{ manga['id'] }}"
+                            data-url="{{ manga['continue_url'] }}" title="Next: {{ manga['continue_title'] }}"
+                            onclick="markReadFromContinue(this)">Continue ▸</a>
                         {% else %}
                         <span class="btn-continue caught-up">Caught up</span>
                         {% endif %}
-                        <select class="menu" aria-label="Jump to a chapter of {{ manga['title'] }}"
-                            onchange="jumpToChapter(this)">
-                            <option value="" disabled selected>⋯</option>
-                            {% for chapter in manga['chapters'] %}
-                            <option value="{{ chapter['url'] }}">{{ chapter['chapter_title'] }}</option>
-                            {% endfor %}
-                        </select>
+                        <details class="chapter-menu">
+                            <summary class="menu" title="All chapters"
+                                aria-label="All chapters of {{ manga['title'] }}">⋯</summary>
+                            <div class="chapter-panel">
+                                {% for chapter in manga['chapters'] %}
+                                <a href="{{ chapter['url'] }}" target="_blank" rel="noopener noreferrer"
+                                    onclick="this.closest('details').open = false">{{ chapter['chapter_title'] }}</a>
+                                {% endfor %}
+                            </div>
+                        </details>
                     </div>
                 </div>
             </div>
