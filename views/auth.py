@@ -3,16 +3,16 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required
 from models import User
-from utils.db import get_db_connection
+from utils.db import db_cursor
 import requests
 import psycopg2
 from config import config
 from datetime import datetime
 
-
 load_dotenv()
 
 auth_bp = Blueprint('auth', __name__)
+
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -32,19 +32,15 @@ def register():
         if not recaptcha_data.get("success"):
             flash("reCAPTCHA verification failed. Please try again.", "error")
             return redirect(url_for('auth.register'))
-        
+
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
 
         try:
-            connection = get_db_connection()
-            cursor = connection.cursor()
-            cursor.execute(
-                'INSERT INTO users (username, password_hash) VALUES (%s, %s)',
-                (username, hashed_password)
-            )
-            connection.commit()
-            cursor.close()
-            connection.close()
+            with db_cursor() as cursor:
+                cursor.execute(
+                    'INSERT INTO users (username, password_hash) VALUES (%s, %s)',
+                    (username, hashed_password)
+                )
             flash('Registration successful! You can now log in.', 'success')
             return redirect(url_for('auth.login'))
         except psycopg2.IntegrityError:
@@ -58,38 +54,31 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        user = None
+        login_succeeded = False
 
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
-        user = cursor.fetchone()
-        cursor.close()
+        with db_cursor() as cursor:
+            cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
+            user = cursor.fetchone()
+            if user and check_password_hash(user['password_hash'], password):
+                if user['first_login']:
+                    cursor.execute(
+                        'INSERT INTO log (manga_title, chapters_added, date_added, user_id) VALUES (%s, %s, %s, %s)',
+                        ("Welcome to the MangaPill Chapter Tracker!", 0, datetime.now(), user['id'])
+                    )
+                    cursor.execute(
+                        'UPDATE users SET first_login = false WHERE id = %s', (user['id'],)
+                    )
+                login_succeeded = True
 
-        if user and check_password_hash(user['password_hash'], password):
+        if login_succeeded:
             user_obj = User(user['id'], user['username'], user['password_hash'])
-            remember = request.form.get("remember") == "on"
-            login_user(user_obj, remember=remember)
-
-
-            if user['first_login']:
-                cursor = connection.cursor()
-                cursor.execute(
-                    'INSERT INTO log (manga_title, chapters_added, date_added, user_id) VALUES (%s, %s, %s, %s)',
-                    ("Welcome to the MangaPill Chapter Tracker!", 0, datetime.now(), user['id'])
-                )
-                cursor.execute(
-                    'UPDATE users SET first_login = false WHERE id = %s', (user['id'],)
-                )
-                connection.commit()
-                cursor.close()
-
-            connection.close()
-            flash('Login successful! Let\'s read some manga!', 'success')
+            login_user(user_obj, remember=(request.form.get("remember") == "on"))
+            flash("Login successful! Let's read some manga!", 'success')
             return redirect(url_for('manga.index'))
-        else:
-            connection.close()
-            flash('Invalid username or password. Please try again.', 'error')
-            return redirect(url_for('auth.login'))
+
+        flash('Invalid username or password. Please try again.', 'error')
+        return redirect(url_for('auth.login'))
 
     return render_template('login.html')
 

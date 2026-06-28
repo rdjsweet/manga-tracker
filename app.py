@@ -5,24 +5,21 @@ from views.auth import auth_bp
 from views.manga import manga_bp
 from views.halloween import halloween_bp
 from models import User
-from utils.db import get_db_connection
+from utils.db import db_cursor
 
 app = Flask(__name__)
 app.config.from_object(config)
 
-# Flask-Login setup
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
 
+
 @login_manager.user_loader
 def load_user(user_id):
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
-    user = cursor.fetchone()
-    cursor.close()
-    connection.close()
+    with db_cursor() as cursor:
+        cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
+        user = cursor.fetchone()
     if user:
         return User(user['id'], user['username'], user['password_hash'])
     return None
