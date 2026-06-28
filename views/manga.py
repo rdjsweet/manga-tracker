@@ -1,65 +1,72 @@
-from flask import Blueprint, request, redirect, url_for, flash, render_template, session
+from flask import Blueprint, request, redirect, url_for, flash, render_template, session, jsonify
 from flask_login import login_required, current_user
-from utils.db import get_db_connection
+from utils.db import db_cursor
+from utils.formatting import to_est
 from scraper import scrape_manga_details
 from datetime import datetime
 import pytz
 
 manga_bp = Blueprint("manga", __name__)
-est = pytz.timezone("America/New_York")
 
-def to_est(dt):
-    return dt.replace(tzinfo=pytz.utc).astimezone(est)
+
+def _build_manga_list(cursor, user_id, new_counts=None):
+    """
+    Fetch manga and their chapters for a user in 2 queries instead of N+1.
+    new_counts: dict of {manga_id: count} — keys may be int or str (normalised internally).
+    """
+    counts = {int(k): int(v) for k, v in (new_counts or {}).items()}
+
+    cursor.execute(
+        """
+        SELECT m.*,
+            (SELECT chapter_title FROM chapters WHERE manga_id = m.id ORDER BY url DESC LIMIT 1)
+            AS latest_chapter_title
+        FROM manga m
+        WHERE m.user_id = %s
+        ORDER BY m.title ASC
+        """,
+        (user_id,),
+    )
+    manga_list = list(cursor.fetchall())
+
+    manga_ids = [m["id"] for m in manga_list]
+    chapters_by_manga = {}
+    if manga_ids:
+        cursor.execute(
+            "SELECT manga_id, chapter_title, url FROM chapters WHERE manga_id = ANY(%s) ORDER BY url DESC",
+            (manga_ids,),
+        )
+        for ch in cursor.fetchall():
+            chapters_by_manga.setdefault(ch["manga_id"], []).append(
+                {"chapter_title": ch["chapter_title"], "url": ch["url"]}
+            )
+
+    for manga in manga_list:
+        manga["chapters"] = chapters_by_manga.get(manga["id"], [])
+        manga["new_chapters_count"] = counts.get(manga["id"], 0)
+
+    return manga_list
+
 
 @manga_bp.route("/")
 @login_required
 def index():
-    connection = get_db_connection()
-    cursor = connection.cursor()
+    with db_cursor() as cursor:
+        new_chapters_dict = session.pop("new_chapters_dict", {})
+        manga_list = _build_manga_list(cursor, current_user.id, new_chapters_dict)
 
-    cursor.execute(
-        """
-        SELECT m.*, 
-        (SELECT chapter_title 
-            FROM chapters 
-            WHERE chapters.manga_id = m.id 
-            ORDER BY url DESC 
-            LIMIT 1) AS latest_chapter_title
-        FROM manga AS m
-        WHERE m.user_id = %s
-        ORDER BY m.title ASC;
-        """,
-        (current_user.id,),
-    )
-
-    manga_list = cursor.fetchall()
-
-    for manga in manga_list:
-        cursor.execute(
-            "SELECT chapter_title, url FROM chapters WHERE manga_id = %s ORDER BY url DESC",
-            (manga["id"],),
+        last_checked_values = [m["last_checked"] for m in manga_list if m["last_checked"]]
+        formatted_last_checked = (
+            to_est(max(last_checked_values)).strftime("%A, %B %d, %Y %I:%M:%S %p")
+            if last_checked_values
+            else "Never Checked"
         )
-        manga["chapters"] = cursor.fetchall()
 
-    new_chapters_dict = session.pop("new_chapters_dict", {})
-
-    for manga in manga_list:
-        manga["new_chapters_count"] = int(new_chapters_dict.get(str(manga["id"]), 0))
-
-    last_checked_values = [
-        manga["last_checked"] for manga in manga_list if manga["last_checked"]
-    ]
-    formatted_last_checked = (
-        to_est(max(last_checked_values)).strftime("%A, %B %d, %Y %I:%M:%S %p")
-        if last_checked_values
-        else "Never Checked"
-    )
-
-    cursor.execute(
-        "SELECT * FROM log WHERE user_id = %s ORDER BY date_added DESC",
-        (current_user.id,),
-    )
-    logs = cursor.fetchall()
+        cursor.execute(
+            "SELECT * FROM log WHERE user_id = %s ORDER BY date_added DESC",
+            (current_user.id,),
+        )
+        logs = cursor.fetchall()
 
     formatted_logs = [
         {
@@ -70,8 +77,6 @@ def index():
         for log in logs
     ]
 
-    cursor.close()
-    connection.close()
     return render_template(
         "index.html",
         manga_list=manga_list,
@@ -79,24 +84,23 @@ def index():
         logs=formatted_logs,
     )
 
+
 @manga_bp.route("/check_updates", methods=["POST"])
 @login_required
 def check_updates():
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM manga WHERE user_id = %s", (current_user.id,))
-    manga_list = cursor.fetchall()
+    with db_cursor() as cursor:
+        cursor.execute("SELECT * FROM manga WHERE user_id = %s", (current_user.id,))
+        manga_list = list(cursor.fetchall())
 
-    total_new_chapters = 0
-    new_chapters_dict = {}
+        total_new_chapters = 0
+        new_chapters_dict = {}
 
-    for manga in manga_list:
-        url = manga["url"]
-        title, chapter_titles, chapter_urls, _ = scrape_manga_details(url)
+        for manga in manga_list:
+            title, chapter_titles, chapter_urls, _ = scrape_manga_details(manga["url"])
+            if title is None or chapter_titles is None:
+                continue
 
-        if title is not None and chapter_titles is not None:
             manga_id = manga["id"]
-
             cursor.execute("SELECT url FROM chapters WHERE manga_id = %s", (manga_id,))
             existing_urls = {row["url"] for row in cursor.fetchall()}
 
@@ -126,95 +130,59 @@ def check_updates():
                     (title, new_count, datetime.now(pytz.utc), current_user.id),
                 )
 
-    connection.commit()
-    cursor.close()
-    connection.close()
-
     flash(f"Update check complete! {total_new_chapters} update(s) found.", "info")
     session["new_chapters_dict"] = new_chapters_dict
     return redirect(url_for("manga.index"))
+
 
 @manga_bp.route("/add", methods=["POST"])
 @login_required
 def add_manga():
     url = request.form["url"]
-    connection = get_db_connection()
-    cursor = connection.cursor()
 
-    cursor.execute(
-        "SELECT * FROM manga WHERE url = %s AND user_id = %s",
-        (url, current_user.id),
-    )
-    existing_manga = cursor.fetchone()
+    with db_cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM manga WHERE url = %s AND user_id = %s",
+            (url, current_user.id),
+        )
+        existing_manga = cursor.fetchone()
 
     if existing_manga:
         flash(f'The manga "{existing_manga["title"]}" is already in your tracker.', "error")
-        cursor.close()
-        connection.close()
         return redirect(url_for("manga.index"))
 
     title, chapter_titles, chapter_urls, _ = scrape_manga_details(url)
-
     if title is None or chapter_titles is None:
         flash("Error: Could not retrieve manga details. Please try again.", "error")
-        cursor.close()
-        connection.close()
         return redirect(url_for("manga.index"))
 
-    cursor.execute(
-        "INSERT INTO manga (title, url, last_checked, user_id) VALUES (%s, %s, %s, %s) RETURNING id",
-        (title, url, datetime.now(pytz.utc), current_user.id),
-    )
-    row = cursor.fetchone()
-
-    if row is None:
-        flash("Error: Failed to add manga to the database.", "error")
-        cursor.close()
-        connection.close()
-        return redirect(url_for("manga.index"))
-
-    manga_id = row["id"]
-
-    for chapter_title, chapter_url in zip(chapter_titles, chapter_urls):
+    with db_cursor() as cursor:
         cursor.execute(
-            "INSERT INTO chapters (manga_id, chapter_title, url) VALUES (%s, %s, %s)",
-            (manga_id, chapter_title, chapter_url),
+            "INSERT INTO manga (title, url, last_checked, user_id) VALUES (%s, %s, %s, %s) RETURNING id",
+            (title, url, datetime.now(pytz.utc), current_user.id),
         )
+        row = cursor.fetchone()
+        if row is None:
+            flash("Error: Failed to add manga to the database.", "error")
+            return redirect(url_for("manga.index"))
 
-    connection.commit()
-    cursor.close()
-    connection.close()
+        manga_id = row["id"]
+        for chapter_title, chapter_url in zip(chapter_titles, chapter_urls):
+            cursor.execute(
+                "INSERT INTO chapters (manga_id, chapter_title, url) VALUES (%s, %s, %s)",
+                (manga_id, chapter_title, chapter_url),
+            )
+
     flash("Manga added successfully!", "success")
     return redirect(url_for("manga.index"))
+
 
 @manga_bp.route("/delete/<int:id>")
 @login_required
 def delete_manga(id):
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute(
-        "DELETE FROM manga WHERE id = %s AND user_id = %s", (id, current_user.id)
-    )
-    connection.commit()
-    cursor.close()
-    connection.close()
+    with db_cursor() as cursor:
+        cursor.execute(
+            "DELETE FROM manga WHERE id = %s AND user_id = %s", (id, current_user.id)
+        )
     flash("Manga deleted successfully.", "info")
     return redirect(url_for("manga.index"))
-
-@manga_bp.route("/select_chapter/<int:manga_id>")
-def select_chapter(manga_id):
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
-    cursor.execute(
-        "SELECT * FROM chapters WHERE manga_id = %s ORDER BY created_at DESC",
-        (manga_id,),
-    )
-    chapters = cursor.fetchall()
-
-    cursor.close()
-    connection.close()
-
-    return render_template(
-        "chapter_dropdown.html", chapters=chapters, manga_id=manga_id
-    )
