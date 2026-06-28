@@ -262,6 +262,11 @@ header.top {
     font-size: .92rem;
 }
 
+/* An explicit display rule overrides the `hidden` attribute, so restore it. */
+.banner[hidden] {
+    display: none;
+}
+
 .banner .dot {
     width: 9px;
     height: 9px;
