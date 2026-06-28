@@ -1,6 +1,6 @@
-/* -------------------------------------------------------
+/* =======================================================
    Helpers
-------------------------------------------------------- */
+======================================================= */
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -9,171 +9,255 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-/* -------------------------------------------------------
-   Toast notifications (replaces inline flashes)
-------------------------------------------------------- */
+/* Deterministic gradient for cover placeholders, derived from the title. */
+function hashHue(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
+  return h;
+}
+
+function colouriseCover(cover) {
+  const h = hashHue(cover.dataset.title || '');
+  cover.style.background =
+    `linear-gradient(135deg, hsl(${h} 62% 55%), hsl(${(h + 40) % 360} 58% 45%))`;
+}
+
+function colouriseAll() {
+  document.querySelectorAll('.cover').forEach(colouriseCover);
+}
+
+/* =======================================================
+   Theme toggle
+======================================================= */
+(function initTheme() {
+  const root = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  if (!toggle) return;
+  const sync = () => {
+    toggle.textContent = root.getAttribute('data-theme') === 'dark' ? '🌙' : '☀️';
+  };
+  sync();
+  toggle.addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    sync();
+  });
+})();
+
+/* =======================================================
+   Toast notifications (top-centre)
+======================================================= */
 function ensureToastContainer() {
-  let container = document.getElementById('toast-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'toast-container';
-    document.body.appendChild(container);
+  let c = document.getElementById('toast-container');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'toast-container';
+    document.body.appendChild(c);
   }
-  return container;
+  return c;
 }
 
 function showFlash(message, category) {
-  const container = ensureToastContainer();
   const toast = document.createElement('div');
   toast.className = `toast toast-${category}`;
   toast.setAttribute('role', 'status');
   toast.textContent = message;
-  container.appendChild(toast);
-
-  // Animate in on the next frame so the transition fires.
+  ensureToastContainer().appendChild(toast);
   requestAnimationFrame(() => toast.classList.add('toast-show'));
-
   setTimeout(() => {
     toast.classList.remove('toast-show');
     toast.addEventListener('transitionend', () => toast.remove(), { once: true });
   }, 4000);
 }
 
-/* Convert any server-rendered flashes into toasts on load. */
-document.addEventListener('DOMContentLoaded', () => {
-  const inline = document.querySelector('.flashes');
-  if (!inline) return;
-  inline.querySelectorAll('.alert').forEach((el) => {
-    const match = el.className.match(/alert-(\w+)/);
-    showFlash(el.textContent.trim(), match ? match[1] : 'info');
-  });
-  inline.remove();
-});
-
-/* -------------------------------------------------------
-   Open a chosen chapter in a new tab
-------------------------------------------------------- */
-function jumpToChapter(select) {
-  if (select.value) {
-    window.open(select.value, '_blank', 'noopener');
-  }
-  select.selectedIndex = 0; // reset back to the placeholder
-}
-
-/* -------------------------------------------------------
-   Render a single manga card <li>
-------------------------------------------------------- */
+/* =======================================================
+   Card rendering
+======================================================= */
 function renderMangaCard(manga) {
-  const li = document.createElement('li');
-  li.className = 'manga-card' + (manga.new_chapters_count > 0 ? ' updated' : '');
-  li.dataset.mangaId = manga.id;
+  const id = Number(manga.id);
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.mangaId = id;
 
-  const latestUrl = manga.chapters.length ? manga.chapters[0].url : '#';
+  const badge = manga.unread_count > 0
+    ? `<span class="badge">${manga.unread_count} new</span>` : '';
+  const coverImg = manga.cover_url
+    ? `<img src="${escapeHtml(manga.cover_url)}" alt="${escapeHtml(manga.title)} cover" loading="lazy" onerror="this.remove()">`
+    : '';
+
+  const progress = manga.continue_url
+    ? `<span class="unread">● ${manga.unread_count} unread</span>`
+    : `Caught up · ${escapeHtml(manga.latest_chapter_title || 'N/A')}`;
+
+  const action = manga.continue_url
+    ? `<button class="btn-continue" type="button" data-url="${escapeHtml(manga.continue_url)}"
+         title="Next: ${escapeHtml(manga.continue_title || '')}" onclick="continueReading(this)">Continue ▸</button>`
+    : `<span class="btn-continue caught-up">Caught up</span>`;
+
   const options = manga.chapters
     .map((ch) => `<option value="${escapeHtml(ch.url)}">${escapeHtml(ch.chapter_title)}</option>`)
     .join('');
-  const badge = manga.new_chapters_count > 0
-    ? `<span class="badge-new">${manga.new_chapters_count} new</span>`
-    : '';
 
-  li.innerHTML = `
-    <div class="manga-card-top">
-      <strong class="manga-title">${escapeHtml(manga.title)}</strong>
+  card.innerHTML = `
+    <div class="cover" data-title="${escapeHtml(manga.title)}">
+      <span class="cover-fallback">${escapeHtml(manga.title)}</span>
+      ${coverImg}
       ${badge}
+      <button class="delete-x" type="button" aria-label="Remove ${escapeHtml(manga.title)}"
+        data-manga-id="${id}" data-manga-title="${escapeHtml(manga.title)}"
+        onclick="confirmDelete(this.dataset.mangaId, this.dataset.mangaTitle)">✕</button>
     </div>
-    <p class="manga-latest">Latest: ${escapeHtml(manga.latest_chapter_title || 'N/A')}</p>
-    <div class="manga-actions">
-      <a class="btn-read" href="${escapeHtml(latestUrl)}" target="_blank" rel="noopener noreferrer">Read latest</a>
-      <select class="chapter-jump" aria-label="Jump to a chapter for ${escapeHtml(manga.title)}"
-        onchange="jumpToChapter(this)">
-        <option value="" disabled selected>Jump to chapter…</option>
-        ${options}
-      </select>
-    </div>
-    <button type="button" class="btn-delete"
-      data-manga-id="${manga.id}" data-manga-title="${escapeHtml(manga.title)}"
-      onclick="confirmDelete(this.dataset.mangaId, this.dataset.mangaTitle)">Delete</button>
-  `;
-  return li;
+    <div class="card-body">
+      <p class="card-title">${escapeHtml(manga.title)}</p>
+      <p class="progress">${progress}</p>
+      <div class="card-actions">
+        ${action}
+        <select class="menu" aria-label="Jump to a chapter of ${escapeHtml(manga.title)}"
+          onchange="jumpToChapter(this)">
+          <option value="" disabled selected>⋯</option>
+          ${options}
+        </select>
+      </div>
+    </div>`;
+
+  colouriseCover(card.querySelector('.cover'));
+  return card;
 }
 
-/* -------------------------------------------------------
-   Re-render the full manga list
-------------------------------------------------------- */
-function renderMangaList(mangaArray) {
-  const ul = document.querySelector('.scroll-box-manga ul');
-  ul.innerHTML = '';
+function setLibraryCount() {
+  const n = document.querySelectorAll('#grid .card').length;
+  document.getElementById('library-count').textContent = `${n} series`;
+}
+
+function renderGrid(mangaArray) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
   if (!mangaArray.length) {
-    const li = document.createElement('li');
-    li.className = 'empty-state';
-    li.innerHTML = 'No manga tracked yet.<br>Paste a chapter-list URL above to start.';
-    ul.appendChild(li);
+    grid.innerHTML =
+      '<div class="empty-state">No manga tracked yet.<br>Paste a chapter-list URL above to start.</div>';
+    setLibraryCount();
     return;
   }
-  mangaArray.forEach((manga) => ul.appendChild(renderMangaCard(manga)));
+  mangaArray.forEach((m) => grid.appendChild(renderMangaCard(m)));
+  setLibraryCount();
 }
 
-/* -------------------------------------------------------
-   Re-render the activity log
-------------------------------------------------------- */
-function renderLogs(logs) {
-  const ul = document.querySelector('.scroll-box-logs ul');
+function renderActivity(logs) {
+  const ul = document.getElementById('activity');
   ul.innerHTML = '';
   if (!logs.length) {
-    const li = document.createElement('li');
-    li.className = 'empty-state';
-    li.textContent = 'No activity yet.';
-    ul.appendChild(li);
+    ul.innerHTML = '<li class="empty-state">No activity yet.</li>';
     return;
   }
   logs.forEach((log) => {
     const li = document.createElement('li');
-    li.innerHTML = `${escapeHtml(log.date_added)}<br><strong>${escapeHtml(log.manga_title)}</strong>${log.chapters_added > 0 ? `: ${log.chapters_added} new chapter(s) added!` : ''}`;
+    li.innerHTML =
+      `<span class="activity-date">${escapeHtml(log.date_added)}</span><strong>${escapeHtml(log.manga_title)}</strong>` +
+      (log.chapters_added > 0 ? ` · ${log.chapters_added} new chapter(s)` : '');
     ul.appendChild(li);
   });
 }
 
-/* -------------------------------------------------------
+function replaceCard(manga) {
+  const existing = document.querySelector(`.card[data-manga-id="${manga.id}"]`);
+  if (existing) existing.replaceWith(renderMangaCard(manga));
+}
+
+/* =======================================================
+   Reading + progress
+======================================================= */
+async function markRead(mangaId, chapterUrl) {
+  try {
+    const resp = await fetch(`/api/manga/${mangaId}/read`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: chapterUrl }),
+    });
+    if (!resp.ok) {
+      console.warn('mark_read failed:', resp.status);
+      return;
+    }
+    const data = await resp.json();
+    if (data.manga) replaceCard(data.manga);
+  } catch (err) {
+    console.error('mark_read error:', err);
+  }
+}
+
+function continueReading(btn) {
+  const url = btn.dataset.url;
+  if (url) window.open(url, '_blank', 'noopener');
+  const card = btn.closest('.card');
+  if (card) markRead(card.dataset.mangaId, url);
+}
+
+/* The chapter menu is pure navigation: it opens any chapter without touching
+   read progress, so jumping back to re-read an old chapter never rewinds your
+   position and re-flags newer chapters as unread. "Continue" is what advances
+   progress. */
+function jumpToChapter(select) {
+  const url = select.value;
+  if (url) window.open(url, '_blank', 'noopener');
+  select.selectedIndex = 0;
+}
+
+/* =======================================================
+   Summary banner
+======================================================= */
+function showSummary(totalNew, seriesCount) {
+  const banner = document.getElementById('summary-banner');
+  const text = document.getElementById('summary-text');
+  if (totalNew > 0) {
+    text.innerHTML =
+      `<strong>${totalNew} new chapter${totalNew !== 1 ? 's' : ''}</strong> across ${seriesCount} series since your last check.`;
+  } else {
+    text.textContent = 'No new chapters found.';
+  }
+  banner.hidden = false;
+}
+
+document.getElementById('summary-close').addEventListener('click', () => {
+  document.getElementById('summary-banner').hidden = true;
+});
+
+/* =======================================================
    Check for updates
-------------------------------------------------------- */
+======================================================= */
 const checkForm = document.querySelector('form[action*="check_updates"]');
 checkForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const overlay = document.getElementById('spinner-overlay');
   const btn = checkForm.querySelector('button');
-  const listBox = document.querySelector('.scroll-box-manga');
-
   overlay.style.display = 'flex';
   btn.disabled = true;
-  listBox.classList.add('is-loading');
 
   try {
     const resp = await fetch('/api/check_updates', { method: 'POST' });
     if (!resp.ok) throw new Error('Server error');
     const data = await resp.json();
-    renderMangaList(data.manga);
-    renderLogs(data.logs);
-    document.getElementById('last-checked').textContent = `Last Checked: ${data.last_checked}`;
-    showFlash(`Update check complete! ${data.total_new} update(s) found.`, 'info');
+    renderGrid(data.manga);
+    renderActivity(data.logs);
+    document.getElementById('last-checked').textContent = `Last checked: ${data.last_checked}`;
+    showSummary(data.total_new, data.new_series_count);
   } catch (err) {
     console.error('check_updates error:', err);
     showFlash('Error checking for updates. Please try again.', 'error');
   } finally {
     overlay.style.display = 'none';
     btn.disabled = false;
-    listBox.classList.remove('is-loading');
   }
 });
 
-/* -------------------------------------------------------
-   Add manga
-------------------------------------------------------- */
-document.querySelector('.form-inline').addEventListener('submit', async (e) => {
+/* =======================================================
+   Add series
+======================================================= */
+document.querySelector('.add-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const urlInput = document.getElementById('url');
   const btn = e.target.querySelector('button');
   const originalText = btn.textContent;
-  btn.textContent = 'Adding...';
+  btn.textContent = 'Adding…';
   btn.disabled = true;
 
   try {
@@ -186,32 +270,33 @@ document.querySelector('.form-inline').addEventListener('submit', async (e) => {
     if (data.error) {
       showFlash(data.error, 'error');
     } else {
-      const ul = document.querySelector('.scroll-box-manga ul');
-      const emptyState = ul.querySelector('.empty-state');
-      if (emptyState) emptyState.remove();
-      ul.prepend(renderMangaCard(data.manga));
+      const grid = document.getElementById('grid');
+      const empty = grid.querySelector('.empty-state');
+      if (empty) empty.remove();
+      grid.prepend(renderMangaCard(data.manga));
+      setLibraryCount();
       urlInput.value = '';
-      showFlash('Manga added successfully!', 'success');
+      showFlash('Series added.', 'success');
     }
   } catch (err) {
     console.error('api_add error:', err);
-    showFlash('Error: Could not add manga. Please try again.', 'error');
+    showFlash('Could not add the series. Please try again.', 'error');
   } finally {
     btn.textContent = originalText;
     btn.disabled = false;
   }
 });
 
-/* -------------------------------------------------------
-   Delete modal (with focus management + keyboard support)
-------------------------------------------------------- */
+/* =======================================================
+   Delete modal (focus-managed + keyboard accessible)
+======================================================= */
 let lastFocusedTrigger = null;
 
 function confirmDelete(mangaId, mangaTitle) {
   const modal = document.getElementById('deleteModal');
   lastFocusedTrigger = document.activeElement;
-
-  document.getElementById('modal-text').textContent = `Are you sure you want to delete "${mangaTitle}"?`;
+  document.getElementById('modal-text').textContent =
+    `Are you sure you want to remove "${mangaTitle}"?`;
   modal.style.display = 'flex';
 
   const confirmBtn = document.getElementById('confirmDeleteBtn');
@@ -221,25 +306,25 @@ function confirmDelete(mangaId, mangaTitle) {
       const resp = await fetch(`/api/manga/${mangaId}`, { method: 'DELETE' });
       const data = await resp.json();
       if (data.ok) {
-        const li = document.querySelector(`[data-manga-id="${mangaId}"]`);
-        if (li) {
-          li.style.transition = 'opacity 0.3s, max-height 0.4s';
-          li.style.overflow = 'hidden';
-          li.style.opacity = '0';
-          li.style.maxHeight = '0';
+        const card = document.querySelector(`.card[data-manga-id="${mangaId}"]`);
+        if (card) {
+          card.style.transition = 'opacity .3s, transform .3s';
+          card.style.opacity = '0';
+          card.style.transform = 'scale(.95)';
           setTimeout(() => {
-            li.remove();
-            const ul = document.querySelector('.scroll-box-manga ul');
-            if (ul && !ul.children.length) renderMangaList([]);
-          }, 400);
+            card.remove();
+            const grid = document.getElementById('grid');
+            if (!grid.querySelector('.card')) renderGrid([]);
+            else setLibraryCount();
+          }, 300);
         }
-        showFlash('Manga deleted successfully.', 'info');
+        showFlash('Series removed.', 'info');
       } else {
-        showFlash(data.error || 'Error deleting manga.', 'error');
+        showFlash(data.error || 'Error removing series.', 'error');
       }
     } catch (err) {
       console.error('api_delete error:', err);
-      showFlash('Error: Could not delete manga. Please try again.', 'error');
+      showFlash('Could not remove the series. Please try again.', 'error');
     }
   };
 
@@ -254,22 +339,18 @@ function closeModal() {
   lastFocusedTrigger = null;
 }
 
-/* Backdrop click closes the modal. */
 window.addEventListener('click', (event) => {
   const modal = document.getElementById('deleteModal');
   if (event.target === modal) closeModal();
 });
 
-/* Escape closes; Tab is trapped inside the dialog. */
 document.addEventListener('keydown', (e) => {
   const modal = document.getElementById('deleteModal');
   if (modal.style.display !== 'flex') return;
-
   if (e.key === 'Escape') {
     closeModal();
     return;
   }
-
   if (e.key === 'Tab') {
     const focusables = modal.querySelectorAll('button, [tabindex="0"]');
     if (!focusables.length) return;
@@ -282,5 +363,20 @@ document.addEventListener('keydown', (e) => {
       e.preventDefault();
       first.focus();
     }
+  }
+});
+
+/* =======================================================
+   On load: colourise covers, convert server flashes to toasts
+======================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+  colouriseAll();
+  const inline = document.querySelector('.flashes');
+  if (inline) {
+    inline.querySelectorAll('.alert').forEach((el) => {
+      const m = el.className.match(/alert-(\w+)/);
+      showFlash(el.textContent.trim(), m ? m[1] : 'info');
+    });
+    inline.remove();
   }
 });

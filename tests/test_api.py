@@ -86,3 +86,50 @@ def test_api_add_bad_url_returns_422(logged_in_client):
 
     assert resp.status_code == 422
     assert 'error' in resp.get_json()
+
+
+def test_api_mark_read_returns_updated_manga(logged_in_client):
+    mock_cursor = MagicMock()
+    mock_cursor.fetchone.return_value = {'id': 7}  # UPDATE ... RETURNING id
+    updated = [{
+        'id': 7, 'title': 'X', 'url': 'u', 'cover_url': None,
+        'latest_chapter_title': 'Ch 5', 'unread_count': 0,
+        'continue_url': None, 'continue_title': None, 'chapters': [],
+    }]
+
+    with patch('utils.db.get_db_connection') as mock_conn_factory:
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn_factory.return_value = mock_conn
+        with patch('views.manga._build_manga_list', return_value=updated):
+            resp = logged_in_client.post('/api/manga/7/read', json={'url': 'u5'})
+
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['manga']['id'] == 7
+    assert data['manga']['caught_up'] is True
+
+
+def test_api_mark_read_404_when_not_owned(logged_in_client):
+    mock_cursor = MagicMock()
+    mock_cursor.fetchone.return_value = None  # UPDATE matched no row
+
+    with patch('utils.db.get_db_connection') as mock_conn_factory:
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn_factory.return_value = mock_conn
+        resp = logged_in_client.post('/api/manga/999/read', json={'url': 'u5'})
+
+    assert resp.status_code == 404
+
+
+def test_api_mark_read_400_without_url(logged_in_client):
+    mock_cursor = MagicMock()
+
+    with patch('utils.db.get_db_connection') as mock_conn_factory:
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn_factory.return_value = mock_conn
+        resp = logged_in_client.post('/api/manga/7/read', json={})
+
+    assert resp.status_code == 400

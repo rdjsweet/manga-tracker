@@ -1,7 +1,24 @@
 import requests
 from bs4 import BeautifulSoup
 
+
+def _extract_cover(soup):
+    """Return the cover image URL from a MangaPill page, or None.
+
+    The og:image meta tag is the most reliable cover source on MangaPill.
+    """
+    og_image = soup.find("meta", property="og:image")
+    if og_image and og_image.get("content"):
+        return og_image["content"].strip()
+    return None
+
+
 def scrape_manga_details(url):
+    """Scrape a MangaPill chapter-list page.
+
+    Returns a 4-tuple: (title, chapter_titles, chapter_urls, cover_url).
+    On any failure the leading elements are None so callers can guard on title.
+    """
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -14,11 +31,12 @@ def scrape_manga_details(url):
             return None, None, None, None
 
         title = title_tag.text.strip()
+        cover_url = _extract_cover(soup)
 
         chapters_div = soup.find("div", id="chapters")
         if not chapters_div:
             print("Could not find the 'chapters' element on the page.")
-            return title, None, None, None
+            return title, None, None, cover_url
 
         chapter_links = chapters_div.find_all(
             "a", class_="border border-border p-1 hover:bg-brand hover:text-white"
@@ -32,11 +50,9 @@ def scrape_manga_details(url):
 
         if not chapter_titles:
             print("No chapters found on the page.")
-            return title, [], [], 0
+            return title, [], [], cover_url
 
-        chapter_count = len(chapter_links)
-
-        return title, chapter_titles, chapter_urls, chapter_count
+        return title, chapter_titles, chapter_urls, cover_url
 
     except requests.exceptions.RequestException as e:
         print(f"Error fetching the URL: {e}")
@@ -45,12 +61,12 @@ def scrape_manga_details(url):
 
 if __name__ == "__main__":
     manga_url = "https://www.mangapill.com/manga/8/kingdom"
-    title, chapter_titles, chapter_urls, chapter_count = scrape_manga_details(manga_url)
-    
+    title, chapter_titles, chapter_urls, cover_url = scrape_manga_details(manga_url)
+
     if title:
         print(f"Title: {title}")
-        print(f"Chapter Count: {chapter_count}")
-        print("Chapters:")
+        print(f"Cover: {cover_url}")
+        print(f"Chapter Count: {len(chapter_titles)}")
         for chap_title, chap_url in zip(chapter_titles, chapter_urls):
             print(f"{chap_title} -> {chap_url}")
     else:

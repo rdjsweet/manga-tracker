@@ -7,10 +7,19 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>📖</text></svg>">
-    <title>MangaPill Chapter Tracker - Home</title>
+    <title>MangaPill Tracker</title>
+    <!-- Set the theme before paint to avoid a flash of the wrong colours. -->
+    <script>
+        (function () {
+            var t = localStorage.getItem('theme') ||
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
 </head>
 
 <body>
@@ -21,118 +30,131 @@
         </div>
     </div>
 
-    <div class="wrap">
-        <a href="{{ url_for('auth.logout') }}" class="logout-btn">Log Out</a>
-        <div class="title">
-            <img src="{{ url_for('static', filename='images/ryangit.png') }}" alt="Site logo">
-            <h1>MangaPill Chapter Tracker</h1>
+    <div class="page">
+        <header class="top">
+            <div class="brand">
+                <div class="logo">📖</div>
+                <h1>MangaPill Tracker</h1>
+            </div>
+            <div class="header-actions">
+                {% if current_user.is_authenticated and current_user.username in ["sarahsweet", "rdjsweet"] %}
+                <a class="icon-btn" href="{{ url_for('halloween.index') }}" title="Halloween" aria-label="Halloween">🎃</a>
+                {% endif %}
+                <button class="icon-btn" id="themeToggle" type="button" title="Toggle theme"
+                    aria-label="Toggle light/dark theme">🌙</button>
+                <a class="btn-logout" href="{{ url_for('auth.logout') }}">Log Out</a>
+            </div>
+        </header>
+
+        <div class="toolbar">
+            <form class="add-form" action="{{ url_for('manga.add_manga') }}" method="POST">
+                <input type="text" name="url" id="url" placeholder="Paste a MangaPill chapter-list URL to track…"
+                    required>
+                <button class="btn-primary" type="submit">Add</button>
+            </form>
+            <form action="{{ url_for('manga.check_updates') }}" method="POST">
+                <button class="btn-check" type="submit">↻ Check for updates</button>
+            </form>
         </div>
 
-        {% if current_user.is_authenticated and current_user.username in ["sarahsweet", "rdjsweet"] %}
-        <nav class="quick-links">
-            <a href="{{ url_for('halloween.index') }}">🎃 Halloween</a>
-        </nav>
+        <!-- Persistent summary banner, populated by JS after a check -->
+        <div id="summary-banner" class="banner" hidden>
+            <span class="dot"></span>
+            <span id="summary-text"></span>
+            <button class="close" type="button" id="summary-close" aria-label="Dismiss">✕</button>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flashes" hidden>
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
         {% endif %}
+        {% endwith %}
 
-        <div class="container">
-            <div class="content">
-                <p>Paste URL from <u><strong>Manga Chapter List</strong></u> Below to Add</p>
-                <form action="{{ url_for('manga.add_manga') }}" method="POST" class="form-inline">
-                    <input type="text" name="url" id="url" placeholder="Enter manga URL here" required>
-                    <button type="submit">Add</button>
-                </form>
+        <p class="last-checked" id="last-checked">Last checked: {{ last_checked }}</p>
 
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                <div class="flashes">
-                    {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} flash-message">{{ message }}</div>
-                    {% endfor %}
+        <div class="section-head">
+            <h2>Your Library</h2>
+            <span class="count" id="library-count">{{ manga_list|length }} series</span>
+        </div>
+
+        <div class="grid" id="grid">
+            {% for manga in manga_list %}
+            <div class="card" data-manga-id="{{ manga['id'] }}">
+                <div class="cover" data-title="{{ manga['title'] }}">
+                    <span class="cover-fallback">{{ manga['title'] }}</span>
+                    {% if manga['cover_url'] %}
+                    <img src="{{ manga['cover_url'] }}" alt="{{ manga['title'] }} cover" loading="lazy"
+                        onerror="this.remove()">
+                    {% endif %}
+                    {% if manga['unread_count'] > 0 %}
+                    <span class="badge">{{ manga['unread_count'] }} new</span>
+                    {% endif %}
+                    <button class="delete-x" type="button" aria-label="Remove {{ manga['title'] }}"
+                        data-manga-id="{{ manga['id'] }}" data-manga-title="{{ manga['title'] }}"
+                        onclick="confirmDelete(this.dataset.mangaId, this.dataset.mangaTitle)">✕</button>
                 </div>
-                {% endif %}
-                {% endwith %}
-
-                <form action="{{ url_for('manga.check_updates') }}" method="post">
-                    <button type="submit" class="check-updates-btn">Check for Updates</button>
-                </form>
-                <br>
-                <p id="last-checked">Last Checked: {{ last_checked }}</p>
-            </div>
-
-            <div class="scrollables">
-                <div class="scroll-box-manga">
-                    <h2>Manga List</h2>
-                    <ul>
-                        {% for manga in manga_list %}
-                        <li data-manga-id="{{ manga['id'] }}"
-                            class="manga-card{% if manga['new_chapters_count'] > 0 %} updated{% endif %}">
-                            <div class="manga-card-top">
-                                <strong class="manga-title">{{ manga['title'] }}</strong>
-                                {% if manga['new_chapters_count'] > 0 %}
-                                <span class="badge-new">{{ manga['new_chapters_count'] }} new</span>
-                                {% endif %}
-                            </div>
-                            <p class="manga-latest">Latest: {{ manga['latest_chapter_title'] }}</p>
-
-                            <div class="manga-actions">
-                                <a class="btn-read"
-                                   href="{{ manga['chapters'][0]['url'] if manga['chapters'] else '#' }}"
-                                   target="_blank" rel="noopener noreferrer">Read latest</a>
-                                <select class="chapter-jump" aria-label="Jump to a chapter for {{ manga['title'] }}"
-                                    onchange="jumpToChapter(this)">
-                                    <option value="" disabled selected>Jump to chapter…</option>
-                                    {% for chapter in manga['chapters'] %}
-                                    <option value="{{ chapter['url'] }}">{{ chapter['chapter_title'] }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <button type="button" class="btn-delete"
-                                data-manga-id="{{ manga['id'] }}"
-                                data-manga-title="{{ manga['title'] }}"
-                                onclick="confirmDelete(this.dataset.mangaId, this.dataset.mangaTitle)">Delete</button>
-                        </li>
+                <div class="card-body">
+                    <p class="card-title">{{ manga['title'] }}</p>
+                    <p class="progress">
+                        {% if manga['continue_url'] %}
+                        <span class="unread">● {{ manga['unread_count'] }} unread</span>
                         {% else %}
-                        <li class="empty-state">No manga tracked yet.<br>Paste a chapter-list URL above to start.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-
-                <div class="scroll-box-logs">
-                    <div class="logs">
-                        <h2>Activity Log</h2>
-                        <ul>
-                            {% for log in logs %}
-                            <li>{{ log['date_added'] }}<br>
-                                <strong>{{ log['manga_title'] }}</strong>
-                                {% if log['chapters_added'] > 0 %}
-                                : {{ log['chapters_added'] }} new chapter(s) added!
-                                {% endif %}
-                            </li>
-                            {% else %}
-                            <li class="empty-state">No activity yet.</li>
+                        Caught up · {{ manga['latest_chapter_title'] or 'N/A' }}
+                        {% endif %}
+                    </p>
+                    <div class="card-actions">
+                        {% if manga['continue_url'] %}
+                        <button class="btn-continue" type="button" data-url="{{ manga['continue_url'] }}"
+                            title="Next: {{ manga['continue_title'] }}" onclick="continueReading(this)">Continue ▸</button>
+                        {% else %}
+                        <span class="btn-continue caught-up">Caught up</span>
+                        {% endif %}
+                        <select class="menu" aria-label="Jump to a chapter of {{ manga['title'] }}"
+                            onchange="jumpToChapter(this)">
+                            <option value="" disabled selected>⋯</option>
+                            {% for chapter in manga['chapters'] %}
+                            <option value="{{ chapter['url'] }}">{{ chapter['chapter_title'] }}</option>
                             {% endfor %}
-                        </ul>
+                        </select>
                     </div>
                 </div>
             </div>
+            {% else %}
+            <div class="empty-state">No manga tracked yet.<br>Paste a chapter-list URL above to start.</div>
+            {% endfor %}
         </div>
 
-        <div id="deleteModal" class="modal">
-            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title"
-                aria-describedby="modal-text">
-                <span class="close" role="button" aria-label="Close dialog" tabindex="0"
-                    onclick="closeModal()">&times;</span>
-                <h2 id="modal-title">Confirm Deletion</h2>
-                <p id="modal-text">Are you sure you want to delete this manga?</p>
-                <button id="confirmDeleteBtn">✓</button>
-                <button class="modal-cancel-btn" onclick="closeModal()">✕</button>
-            </div>
+        <div class="section-head" style="margin-top: 2.5rem;">
+            <h2>Activity</h2>
         </div>
+        <ul class="activity" id="activity">
+            {% for log in logs %}
+            <li>
+                <span class="activity-date">{{ log['date_added'] }}</span>
+                <strong>{{ log['manga_title'] }}</strong>{% if log['chapters_added'] > 0 %} · {{ log['chapters_added'] }}
+                new chapter(s){% endif %}
+            </li>
+            {% else %}
+            <li class="empty-state">No activity yet.</li>
+            {% endfor %}
+        </ul>
 
-        <footer class="site-footer">
-            &copy; 2025 SweetSoft, Ryan Sweet. All Rights Reserved.
-        </footer>
+        <footer>© 2026 SweetSoft, Ryan Sweet. All Rights Reserved.</footer>
+    </div>
+
+    <div id="deleteModal" class="modal">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title"
+            aria-describedby="modal-text">
+            <span class="close" role="button" aria-label="Close dialog" tabindex="0" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title">Remove series?</h2>
+            <p id="modal-text">Are you sure you want to remove this series?</p>
+            <button id="confirmDeleteBtn" type="button">Remove</button>
+            <button class="modal-cancel-btn" type="button" onclick="closeModal()">Cancel</button>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='app.js') }}" defer></script>

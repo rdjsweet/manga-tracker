@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangaPill Tracker — Redesign Mockup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ---------- Tokens ---------- */
+        :root {
+            --bg: #f4f5f7;
+            --surface: #ffffff;
+            --surface-2: #f0f1f4;
+            --text: #14161a;
+            --text-2: #5b6470;
+            --text-3: #8a929e;
+            --border: #e3e6ea;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-soft: #eef0fe;
+            --danger: #ef4444;
+            --new: #10b981;
+            --new-soft: #e7f8f1;
+            --shadow-sm: 0 1px 2px rgba(20, 22, 26, .06), 0 1px 3px rgba(20, 22, 26, .1);
+            --shadow-md: 0 4px 6px rgba(20, 22, 26, .05), 0 10px 20px rgba(20, 22, 26, .08);
+            --shadow-lg: 0 20px 40px rgba(20, 22, 26, .18);
+            --radius: 14px;
+            --radius-sm: 9px;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f1115;
+            --surface: #181b21;
+            --surface-2: #21252d;
+            --text: #eceef2;
+            --text-2: #a3acba;
+            --text-3: #6b7483;
+            --border: #272c35;
+            --accent: #818cf8;
+            --accent-hover: #a5b0ff;
+            --accent-soft: #20243a;
+            --danger: #f87171;
+            --new: #34d399;
+            --new-soft: #122a23;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, .3);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, .45);
+            --shadow-lg: 0 24px 48px rgba(0, 0, 0, .6);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            transition: background .3s, color .3s;
+        }
+
+        .page {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        /* ---------- Header ---------- */
+        header.top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+        }
+
+        .brand .logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            display: grid;
+            place-items: center;
+            font-size: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .brand h1 {
+            font-family: 'Bangers', cursive;
+            font-weight: 400;
+            font-size: 1.9rem;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-2);
+            cursor: pointer;
+            font-size: 18px;
+            display: grid;
+            place-items: center;
+            transition: background .2s, color .2s, transform .1s;
+        }
+
+        .icon-btn:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        .icon-btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-logout {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-2);
+            padding: 0 .9rem;
+            height: 40px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .9rem;
+            cursor: pointer;
+            transition: background .2s, color .2s;
+        }
+
+        .btn-logout:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        /* ---------- Toolbar ---------- */
+        .toolbar {
+            display: flex;
+            gap: .75rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .add-form {
+            display: flex;
+            gap: .6rem;
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .add-form input {
+            flex: 1;
+            padding: .7rem .9rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: .95rem;
+            font-family: inherit;
+        }
+
+        .add-form input::placeholder {
+            color: var(--text-3);
+        }
+
+        .add-form input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 0 1.3rem;
+            font-weight: 600;
+            font-size: .95rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background .2s, transform .1s;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-check {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0 1.1rem;
+            font-weight: 600;
+            font-size: .95rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+        .btn-check:hover {
+            background: var(--surface-2);
+        }
+
+        .last-checked {
+            color: var(--text-3);
+            font-size: .82rem;
+            margin: 0 0 1.5rem;
+        }
+
+        /* ---------- Summary banner ---------- */
+        .banner {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            background: var(--new-soft);
+            border: 1px solid color-mix(in srgb, var(--new) 35%, transparent);
+            border-radius: var(--radius-sm);
+            padding: .8rem 1rem;
+            margin-bottom: 1.5rem;
+            font-size: .92rem;
+        }
+
+        .banner .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--new);
+            flex-shrink: 0;
+        }
+
+        .banner strong {
+            font-weight: 700;
+        }
+
+        .banner .close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: var(--text-3);
+            cursor: pointer;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        /* ---------- Section heading ---------- */
+        .section-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin: 0 0 1rem;
+        }
+
+        .section-head h2 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -.01em;
+        }
+
+        .section-head .count {
+            color: var(--text-3);
+            font-size: .85rem;
+        }
+
+        /* ---------- Cover grid ---------- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .card {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+        }
+
+        .cover {
+            position: relative;
+            aspect-ratio: 2 / 3;
+            overflow: hidden;
+        }
+
+        .cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform .35s ease;
+        }
+
+        .card:hover .cover img {
+            transform: scale(1.05);
+        }
+
+        .badge {
+            position: absolute;
+            top: .6rem;
+            right: .6rem;
+            background: var(--new);
+            color: #04130d;
+            font-size: .72rem;
+            font-weight: 700;
+            padding: .2rem .5rem;
+            border-radius: 999px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .delete-x {
+            position: absolute;
+            top: .6rem;
+            left: .6rem;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, .55);
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            display: grid;
+            place-items: center;
+            opacity: 0;
+            transition: opacity .18s;
+        }
+
+        .card:hover .delete-x {
+            opacity: 1;
+        }
+
+        .card-body {
+            padding: .8rem .85rem 1rem;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: .95rem;
+            line-height: 1.25;
+            margin: 0 0 .25rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 2.4em;
+        }
+
+        .progress {
+            font-size: .78rem;
+            color: var(--text-3);
+            margin: 0 0 .75rem;
+        }
+
+        .progress .unread {
+            color: var(--new);
+            font-weight: 600;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: .4rem;
+        }
+
+        .btn-continue {
+            flex: 1;
+            text-align: center;
+            background: var(--accent);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: .85rem;
+            padding: .5rem;
+            border-radius: var(--radius-sm);
+            transition: background .2s;
+        }
+
+        .btn-continue:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-continue.caught-up {
+            background: var(--surface-2);
+            color: var(--text-3);
+            pointer-events: none;
+        }
+
+        .menu {
+            width: 38px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-2);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: .8rem;
+        }
+
+        .menu:hover {
+            background: var(--surface-2);
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-3);
+            font-size: .8rem;
+            margin-top: 3rem;
+        }
+
+        .note {
+            background: var(--accent-soft);
+            border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+            border-radius: var(--radius-sm);
+            padding: .9rem 1rem;
+            font-size: .85rem;
+            color: var(--text-2);
+            margin-bottom: 1.5rem;
+        }
+
+        /* ---------- Tablet ---------- */
+        @media (max-width: 720px) {
+            .page {
+                padding: 1.5rem 1rem 3rem;
+            }
+
+            .toolbar {
+                flex-direction: column;
+            }
+
+            .add-form {
+                min-width: 0;
+            }
+
+            .btn-check {
+                width: 100%;
+                justify-content: center;
+                padding: .7rem;
+            }
+        }
+
+        /* ---------- Phone ---------- */
+        @media (max-width: 480px) {
+            header.top {
+                margin-bottom: 1.25rem;
+            }
+
+            .brand h1 {
+                font-size: 1.5rem;
+            }
+
+            .brand .logo {
+                width: 32px;
+                height: 32px;
+                font-size: 17px;
+            }
+
+            .btn-logout {
+                padding: 0 .7rem;
+                font-size: .82rem;
+            }
+
+            /* Two covers per row keeps the art readable on a phone */
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: .85rem;
+            }
+
+            .card-title {
+                font-size: .88rem;
+            }
+
+            /* Delete + continue are always visible on touch (no hover) */
+            .delete-x {
+                opacity: 1;
+                background: rgba(0, 0, 0, .65);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <header class="top">
+            <div class="brand">
+                <div class="logo">📖</div>
+                <h1>MangaPill Tracker</h1>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="themeToggle" title="Toggle theme">🌙</button>
+                <button class="btn-logout">Log Out</button>
+            </div>
+        </header>
+
+        <div class="note">
+            This is a static mockup with placeholder covers and sample data. Toggle the theme with the moon/sun
+            button. Nothing here is wired to the backend yet — it is only to lock the look and feel.
+        </div>
+
+        <div class="toolbar">
+            <form class="add-form" onsubmit="return false">
+                <input type="text" placeholder="Paste a MangaPill chapter-list URL to track…">
+                <button class="btn-primary" type="submit">Add</button>
+            </form>
+            <button class="btn-check">↻ Check for updates</button>
+        </div>
+
+        <div class="banner">
+            <span class="dot"></span>
+            <span><strong>5 new chapters</strong> across 2 series since your last check.</span>
+            <button class="close" title="Dismiss">✕</button>
+        </div>
+
+        <p class="last-checked">Last checked: Sunday, June 28, 2026 at 6:02 PM</p>
+
+        <div class="section-head">
+            <h2>Your Library</h2>
+            <span class="count">6 series</span>
+        </div>
+
+        <div class="grid" id="grid"></div>
+
+        <footer>© 2026 SweetSoft, Ryan Sweet. All Rights Reserved.</footer>
+    </div>
+
+    <script>
+        // ---------- Sample data ----------
+        const COVERS = [
+            ['One Piece', '#f59e0b', '#ef4444', 'Ch. 1100', 'Ch. 1102', 2],
+            ['Berserk', '#475569', '#0f172a', 'Ch. 371', 'Ch. 374', 3],
+            ['Vinland Saga', '#0ea5e9', '#1e3a8a', 'Ch. 210', 'Ch. 210', 0],
+            ['Vagabond', '#a16207', '#1c1917', 'Ch. 327', 'Ch. 327', 0],
+            ['Chainsaw Man', '#dc2626', '#7f1d1d', 'Ch. 155', 'Ch. 156', 1],
+            ['Jujutsu Kaisen', '#7c3aed', '#312e81', 'Ch. 261', 'Ch. 261', 0],
+        ];
+
+        function coverSVG(title, c1, c2) {
+            const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='450'>
+                <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+                <stop offset='0' stop-color='${c1}'/><stop offset='1' stop-color='${c2}'/></linearGradient></defs>
+                <rect width='300' height='450' fill='url(#g)'/>
+                <text x='150' y='235' font-family='Inter,sans-serif' font-size='22' font-weight='700'
+                fill='rgba(255,255,255,.92)' text-anchor='middle'>${title}</text></svg>`;
+            return 'data:image/svg+xml,' + encodeURIComponent(svg);
+        }
+
+        const grid = document.getElementById('grid');
+        COVERS.forEach(([title, c1, c2, lastRead, latest, unread]) => {
+            const caughtUp = unread === 0;
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="cover">
+                    <img src="${coverSVG(title, c1, c2)}" alt="${title} cover">
+                    ${unread ? `<span class="badge">${unread} new</span>` : ''}
+                    <button class="delete-x" title="Remove">✕</button>
+                </div>
+                <div class="card-body">
+                    <p class="card-title">${title}</p>
+                    <p class="progress">
+                        ${caughtUp
+                    ? `Caught up · ${latest}`
+                    : `Read ${lastRead} · <span class="unread">${latest} available</span>`}
+                    </p>
+                    <div class="card-actions">
+                        <a class="btn-continue ${caughtUp ? 'caught-up' : ''}" href="#">
+                            ${caughtUp ? 'Caught up' : 'Continue ▸'}
+                        </a>
+                        <button class="menu" title="All chapters">⋯</button>
+                    </div>
+                </div>`;
+            grid.appendChild(card);
+        });
+
+        // ---------- Theme toggle ----------
+        const root = document.documentElement;
+        const toggle = document.getElementById('themeToggle');
+        function applyTheme(t) {
+            root.setAttribute('data-theme', t);
+            toggle.textContent = t === 'dark' ? '🌙' : '☀️';
+        }
+        applyTheme(localStorage.getItem('theme') || 'dark');
+        toggle.addEventListener('click', () => {
+            const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', next);
+            applyTheme(next);
+        });
+
+        // dismiss banner
+        document.querySelector('.banner .close').addEventListener('click', (e) => {
+            e.target.closest('.banner').remove();
+        });
+    </script>
+</body>
+
+</html>
