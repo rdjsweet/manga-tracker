@@ -186,3 +186,90 @@ def delete_manga(id):
         )
     flash("Manga deleted successfully.", "info")
     return redirect(url_for("manga.index"))
+
+
+@manga_bp.route("/api/check_updates", methods=["POST"])
+@login_required
+def api_check_updates():
+    with db_cursor() as cursor:
+        cursor.execute("SELECT * FROM manga WHERE user_id = %s", (current_user.id,))
+        manga_list = list(cursor.fetchall())
+
+        total_new = 0
+        new_counts = {}
+
+        for manga in manga_list:
+            title, chapter_titles, chapter_urls, _ = scrape_manga_details(manga["url"])
+            if title is None or chapter_titles is None:
+                new_counts[manga["id"]] = 0
+                continue
+
+            cursor.execute("SELECT url FROM chapters WHERE manga_id = %s", (manga["id"],))
+            existing_urls = {row["url"] for row in cursor.fetchall()}
+
+            new_count = 0
+            for ch_title, ch_url in zip(chapter_titles, chapter_urls):
+                if ch_url not in existing_urls:
+                    cursor.execute(
+                        "INSERT INTO chapters (manga_id, chapter_title, url) VALUES (%s, %s, %s)",
+                        (manga["id"], ch_title, ch_url),
+                    )
+                    new_count += 1
+
+            cursor.execute(
+                "UPDATE manga SET last_checked = %s WHERE id = %s AND user_id = %s",
+                (datetime.now(pytz.utc), manga["id"], current_user.id),
+            )
+
+            if new_count > 0:
+                cursor.execute(
+                    "INSERT INTO log (manga_title, chapters_added, date_added, user_id) VALUES (%s, %s, %s, %s)",
+                    (title, new_count, datetime.now(pytz.utc), current_user.id),
+                )
+
+            new_counts[manga["id"]] = new_count
+            total_new += new_count
+
+        updated_manga = _build_manga_list(cursor, current_user.id, new_counts)
+
+        cursor.execute(
+            "SELECT * FROM log WHERE user_id = %s ORDER BY date_added DESC",
+            (current_user.id,),
+        )
+        logs = list(cursor.fetchall())
+
+    manga_response = [
+        {
+            "id": m["id"],
+            "title": m["title"],
+            "url": m["url"],
+            "latest_chapter_title": m["latest_chapter_title"],
+            "new_chapters_count": m["new_chapters_count"],
+            "chapters": m["chapters"],
+        }
+        for m in updated_manga
+    ]
+    manga_response.sort(key=lambda x: (x["new_chapters_count"] == 0, x["title"].lower()))
+
+    last_checked_values = [m["last_checked"] for m in updated_manga if m.get("last_checked")]
+    last_checked = (
+        to_est(max(last_checked_values)).strftime("%A, %B %d, %Y %I:%M:%S %p")
+        if last_checked_values
+        else "Never Checked"
+    )
+
+    formatted_logs = [
+        {
+            "manga_title": log["manga_title"],
+            "chapters_added": log["chapters_added"],
+            "date_added": to_est(log["date_added"]).strftime("%A, %B %d, %Y %I:%M %p"),
+        }
+        for log in logs
+    ]
+
+    return jsonify({
+        "total_new": total_new,
+        "last_checked": last_checked,
+        "manga": manga_response,
+        "logs": formatted_logs,
+    })
