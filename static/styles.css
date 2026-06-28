@@ -276,6 +276,7 @@ header.top {
 }
 
 .banner .close {
+    position: static;
     margin-left: auto;
     background: none;
     border: none;

@@ -133,3 +133,40 @@ def test_api_mark_read_400_without_url(logged_in_client):
         resp = logged_in_client.post('/api/manga/7/read', json={})
 
     assert resp.status_code == 400
+
+
+def test_api_cover_serves_stored_image(logged_in_client):
+    mock_cursor = MagicMock()
+    mock_cursor.fetchone.return_value = {
+        'cover_image': b'\xff\xd8\xff-image-bytes', 'cover_mime': 'image/png',
+    }
+
+    with patch('utils.db.get_db_connection') as mock_conn_factory:
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn_factory.return_value = mock_conn
+        resp = logged_in_client.get('/api/manga/1/cover')
+
+    assert resp.status_code == 200
+    assert resp.data == b'\xff\xd8\xff-image-bytes'
+    assert resp.headers['Content-Type'] == 'image/png'
+    assert 'max-age' in resp.headers['Cache-Control']
+
+
+def test_api_cover_404_when_no_image(logged_in_client):
+    mock_cursor = MagicMock()
+    mock_cursor.fetchone.return_value = {'cover_image': None, 'cover_mime': None}
+
+    with patch('utils.db.get_db_connection') as mock_conn_factory:
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn_factory.return_value = mock_conn
+        resp = logged_in_client.get('/api/manga/1/cover')
+
+    assert resp.status_code == 404
+
+
+def test_download_cover_rejects_internal_url():
+    from views.manga import _download_cover
+    data, mime = _download_cover('http://169.254.169.254/latest/meta-data/')
+    assert data is None and mime is None

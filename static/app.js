@@ -82,8 +82,8 @@ function renderMangaCard(manga) {
 
   const badge = manga.unread_count > 0
     ? `<span class="badge">${manga.unread_count} new</span>` : '';
-  const coverImg = manga.cover_url
-    ? `<img src="${escapeHtml(manga.cover_url)}" alt="${escapeHtml(manga.title)} cover" loading="lazy" onerror="this.remove()">`
+  const coverImg = manga.has_cover
+    ? `<img src="/api/manga/${id}/cover" alt="${escapeHtml(manga.title)} cover" loading="lazy" onerror="this.remove()">`
     : '';
 
   const progress = manga.continue_url

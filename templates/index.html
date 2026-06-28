@@ -86,9 +86,9 @@
             <div class="card" data-manga-id="{{ manga['id'] }}">
                 <div class="cover" data-title="{{ manga['title'] }}">
                     <span class="cover-fallback">{{ manga['title'] }}</span>
-                    {% if manga['cover_url'] %}
-                    <img src="{{ manga['cover_url'] }}" alt="{{ manga['title'] }} cover" loading="lazy"
-                        onerror="this.remove()">
+                    {% if manga['has_cover'] %}
+                    <img src="{{ url_for('manga.api_cover', id=manga['id']) }}" alt="{{ manga['title'] }} cover"
+                        loading="lazy" onerror="this.remove()">
                     {% endif %}
                     {% if manga['unread_count'] > 0 %}
                     <span class="badge">{{ manga['unread_count'] }} new</span>

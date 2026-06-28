@@ -1,12 +1,69 @@
-from flask import Blueprint, request, redirect, url_for, flash, render_template, session, jsonify
+from flask import Blueprint, request, redirect, url_for, flash, render_template, session, jsonify, Response, abort
 from flask_login import login_required, current_user
 from utils.db import db_cursor
 from utils.formatting import to_est
 from scraper import scrape_manga_details
 from datetime import datetime
+from urllib.parse import urlparse
+import requests
+import psycopg2
 import pytz
 
 manga_bp = Blueprint("manga", __name__)
+
+MANGAPILL_REFERER = "https://mangapill.com/"
+
+
+def _is_safe_cover_url(candidate):
+    """Guard cover downloads against SSRF: https only, no internal hosts."""
+    try:
+        parsed = urlparse(candidate)
+    except (ValueError, AttributeError):
+        return False
+    if parsed.scheme != "https":
+        return False
+    host = (parsed.hostname or "").lower()
+    if (
+        host in ("localhost", "0.0.0.0")
+        or host.startswith("127.")
+        or host.startswith("10.")
+        or host.startswith("192.168.")
+        or host.startswith("169.254.")
+    ):
+        return False
+    return True
+
+
+def _download_cover(cover_url):
+    """Fetch cover bytes from the CDN with the Referer it requires.
+
+    Returns (bytes, mime) on success, or (None, None) on any failure.
+    """
+    if not _is_safe_cover_url(cover_url):
+        return None, None
+    try:
+        resp = requests.get(cover_url, headers={"Referer": MANGAPILL_REFERER}, timeout=10)
+        resp.raise_for_status()
+    except requests.RequestException:
+        return None, None
+    return resp.content, resp.headers.get("Content-Type", "image/jpeg")
+
+
+def _save_cover(cursor, manga_id, cover_url):
+    """Record the cover URL and, if downloadable, store the image bytes."""
+    if not cover_url:
+        return
+    data, mime = _download_cover(cover_url)
+    if data is None:
+        # Keep the URL as a reference even if the download failed this time.
+        cursor.execute(
+            "UPDATE manga SET cover_url = %s WHERE id = %s", (cover_url, manga_id)
+        )
+        return
+    cursor.execute(
+        "UPDATE manga SET cover_url = %s, cover_image = %s, cover_mime = %s WHERE id = %s",
+        (cover_url, psycopg2.Binary(data), mime, manga_id),
+    )
 
 
 def _read_state(chapters, last_read_url):
@@ -50,7 +107,7 @@ def _manga_to_json(manga):
         "id": manga["id"],
         "title": manga["title"],
         "url": manga["url"],
-        "cover_url": manga.get("cover_url"),
+        "has_cover": bool(manga.get("has_cover")),
         "latest_chapter_title": manga.get("latest_chapter_title"),
         "unread_count": manga["unread_count"],
         "continue_url": manga["continue_url"],
@@ -90,9 +147,12 @@ def _build_manga_list(cursor, user_id, new_counts=None):
     """
     counts = {int(k): int(v) for k, v in (new_counts or {}).items()}
 
+    # Select explicit columns and a has_cover flag rather than `m.*`, so the
+    # cover_image blobs never get loaded into memory on a list render.
     cursor.execute(
         """
-        SELECT m.*,
+        SELECT m.id, m.title, m.url, m.last_checked, m.last_read_url, m.cover_url,
+            (m.cover_image IS NOT NULL) AS has_cover,
             (SELECT chapter_title FROM chapters WHERE manga_id = m.id ORDER BY url DESC LIMIT 1)
             AS latest_chapter_title
         FROM manga m
@@ -168,7 +228,10 @@ def _scan_for_updates(cursor, user_id):
     form-fallback update routes. Does NOT touch last_read_url, so newly found
     chapters naturally become unread.
     """
-    cursor.execute("SELECT * FROM manga WHERE user_id = %s", (user_id,))
+    cursor.execute(
+        "SELECT id, url, cover_url, (cover_image IS NOT NULL) AS has_cover FROM manga WHERE user_id = %s",
+        (user_id,),
+    )
     manga_list = list(cursor.fetchall())
 
     new_counts = {}
@@ -194,17 +257,15 @@ def _scan_for_updates(cursor, user_id):
                 )
                 new_count += 1
 
-        # Refresh the cover when we managed to scrape one.
-        if cover_url:
-            cursor.execute(
-                "UPDATE manga SET last_checked = %s, cover_url = %s WHERE id = %s AND user_id = %s",
-                (datetime.now(pytz.utc), cover_url, manga_id, user_id),
-            )
-        else:
-            cursor.execute(
-                "UPDATE manga SET last_checked = %s WHERE id = %s AND user_id = %s",
-                (datetime.now(pytz.utc), manga_id, user_id),
-            )
+        cursor.execute(
+            "UPDATE manga SET last_checked = %s WHERE id = %s AND user_id = %s",
+            (datetime.now(pytz.utc), manga_id, user_id),
+        )
+
+        # Download the cover only when it is new or we don't have one yet, so
+        # repeat checks don't re-download every image.
+        if cover_url and (cover_url != manga["cover_url"] or not manga["has_cover"]):
+            _save_cover(cursor, manga_id, cover_url)
 
         if new_count > 0:
             cursor.execute(
@@ -254,10 +315,10 @@ def add_manga():
     with db_cursor() as cursor:
         cursor.execute(
             """
-            INSERT INTO manga (title, url, last_checked, user_id, cover_url)
-            VALUES (%s, %s, %s, %s, %s) RETURNING id
+            INSERT INTO manga (title, url, last_checked, user_id)
+            VALUES (%s, %s, %s, %s) RETURNING id
             """,
-            (title, url, datetime.now(pytz.utc), current_user.id, cover_url),
+            (title, url, datetime.now(pytz.utc), current_user.id),
         )
         row = cursor.fetchone()
         if row is None:
@@ -271,6 +332,7 @@ def add_manga():
                 (manga_id, chapter_title, chapter_url),
             )
         _mark_caught_up(cursor, manga_id)
+        _save_cover(cursor, manga_id, cover_url)
 
     flash("Manga added successfully!", "success")
     return redirect(url_for("manga.index"))
@@ -350,10 +412,10 @@ def api_add():
     with db_cursor() as cursor:
         cursor.execute(
             """
-            INSERT INTO manga (title, url, last_checked, user_id, cover_url)
-            VALUES (%s, %s, %s, %s, %s) RETURNING id
+            INSERT INTO manga (title, url, last_checked, user_id)
+            VALUES (%s, %s, %s, %s) RETURNING id
             """,
-            (title, url, datetime.now(pytz.utc), current_user.id, cover_url),
+            (title, url, datetime.now(pytz.utc), current_user.id),
         )
         manga_id = cursor.fetchone()["id"]
         for ch_title, ch_url in zip(chapter_titles, chapter_urls):
@@ -362,6 +424,7 @@ def api_add():
                 (manga_id, ch_title, ch_url),
             )
         _mark_caught_up(cursor, manga_id)
+        _save_cover(cursor, manga_id, cover_url)
 
         added = next(m for m in _build_manga_list(cursor, current_user.id) if m["id"] == manga_id)
 
@@ -408,3 +471,26 @@ def api_delete_manga(id):
         return jsonify({"error": "Not found."}), 404
 
     return jsonify({"ok": True})
+
+
+@manga_bp.route("/api/manga/<int:id>/cover")
+@login_required
+def api_cover(id):
+    """Serve a series' stored cover image.
+
+    Covers are downloaded once (with the Referer the CDN requires) and kept in
+    the database, so this just streams the stored bytes — no live CDN call.
+    """
+    with db_cursor() as cursor:
+        cursor.execute(
+            "SELECT cover_image, cover_mime FROM manga WHERE id = %s AND user_id = %s",
+            (id, current_user.id),
+        )
+        row = cursor.fetchone()
+
+    if not row or row["cover_image"] is None:
+        abort(404)
+
+    resp = Response(bytes(row["cover_image"]), content_type=row["cover_mime"] or "image/jpeg")
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
