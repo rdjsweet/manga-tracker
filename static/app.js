@@ -105,7 +105,8 @@ document.querySelector('form[action*="check_updates"]').addEventListener('submit
     renderLogs(data.logs);
     document.getElementById('last-checked').textContent = `Last Checked: ${data.last_checked}`;
     showFlash(`Update check complete! ${data.total_new} update(s) found.`, 'info');
-  } catch {
+  } catch (err) {
+    console.error('check_updates error:', err);
     showFlash('Error checking for updates. Please try again.', 'error');
   } finally {
     overlay.style.display = 'none';
@@ -137,7 +138,8 @@ document.querySelector('.form-inline').addEventListener('submit', async (e) => {
       urlInput.value = '';
       showFlash('Manga added successfully!', 'success');
     }
-  } catch {
+  } catch (err) {
+    console.error('api_add error:', err);
     showFlash('Error: Could not add manga. Please try again.', 'error');
   } finally {
     btn.textContent = originalText;
@@ -170,7 +172,8 @@ function confirmDelete(mangaId, mangaTitle) {
       } else {
         showFlash(data.error || 'Error deleting manga.', 'error');
       }
-    } catch {
+    } catch (err) {
+      console.error('api_delete error:', err);
       showFlash('Error: Could not delete manga. Please try again.', 'error');
     }
   };

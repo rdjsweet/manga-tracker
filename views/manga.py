@@ -107,14 +107,11 @@ def check_updates():
             new_count = 0
             for chapter_title, chapter_url in zip(chapter_titles, chapter_urls):
                 if chapter_url not in existing_urls:
-                    try:
-                        cursor.execute(
-                            "INSERT INTO chapters (manga_id, chapter_title, url) VALUES (%s, %s, %s)",
-                            (manga_id, chapter_title, chapter_url),
-                        )
-                        new_count += 1
-                    except Exception as e:
-                        flash(f"Error adding chapter '{chapter_title}': {str(e)}", "error")
+                    cursor.execute(
+                        "INSERT INTO chapters (manga_id, chapter_title, url) VALUES (%s, %s, %s)",
+                        (manga_id, chapter_title, chapter_url),
+                    )
+                    new_count += 1
 
             new_chapters_dict[str(manga_id)] = new_count
             total_new_chapters += new_count
@@ -278,7 +275,7 @@ def api_check_updates():
 @manga_bp.route("/api/add", methods=["POST"])
 @login_required
 def api_add():
-    data = request.get_json()
+    data = request.get_json() or {}
     url = (data.get("url") or "").strip()
     if not url:
         return jsonify({"error": "URL is required."}), 400

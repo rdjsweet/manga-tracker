@@ -1,7 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
-
 
 def scrape_manga_details(url):
     try:
