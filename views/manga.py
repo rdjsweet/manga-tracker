@@ -273,3 +273,72 @@ def api_check_updates():
         "manga": manga_response,
         "logs": formatted_logs,
     })
+
+
+@manga_bp.route("/api/add", methods=["POST"])
+@login_required
+def api_add():
+    data = request.get_json()
+    url = (data.get("url") or "").strip()
+    if not url:
+        return jsonify({"error": "URL is required."}), 400
+
+    with db_cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM manga WHERE url = %s AND user_id = %s",
+            (url, current_user.id),
+        )
+        existing = cursor.fetchone()
+
+    if existing:
+        return jsonify({"error": f'The manga "{existing["title"]}" is already in your tracker.'}), 409
+
+    title, chapter_titles, chapter_urls, _ = scrape_manga_details(url)
+    if title is None or chapter_titles is None:
+        return jsonify({"error": "Could not retrieve manga details. Please check the URL."}), 422
+
+    with db_cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO manga (title, url, last_checked, user_id) VALUES (%s, %s, %s, %s) RETURNING id",
+            (title, url, datetime.now(pytz.utc), current_user.id),
+        )
+        manga_id = cursor.fetchone()["id"]
+        for ch_title, ch_url in zip(chapter_titles, chapter_urls):
+            cursor.execute(
+                "INSERT INTO chapters (manga_id, chapter_title, url) VALUES (%s, %s, %s)",
+                (manga_id, ch_title, ch_url),
+            )
+
+    # Return chapters newest-first to match the dropdown (ORDER BY url DESC)
+    chapters = [
+        {"chapter_title": t, "url": u}
+        for t, u in zip(reversed(chapter_titles), reversed(chapter_urls))
+    ]
+    latest = chapter_titles[-1] if chapter_titles else None
+
+    return jsonify({
+        "manga": {
+            "id": manga_id,
+            "title": title,
+            "url": url,
+            "latest_chapter_title": latest,
+            "new_chapters_count": 0,
+            "chapters": chapters,
+        }
+    })
+
+
+@manga_bp.route("/api/manga/<int:id>", methods=["DELETE"])
+@login_required
+def api_delete_manga(id):
+    with db_cursor() as cursor:
+        cursor.execute(
+            "DELETE FROM manga WHERE id = %s AND user_id = %s RETURNING id",
+            (id, current_user.id),
+        )
+        deleted = cursor.fetchone()
+
+    if not deleted:
+        return jsonify({"error": "Not found."}), 404
+
+    return jsonify({"ok": True})
