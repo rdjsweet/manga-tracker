@@ -185,11 +185,20 @@ async function markRead(mangaId, chapterUrl) {
   }
 }
 
-/* Open a chapter in a new tab via a synthetic anchor click. mobile Safari
-   blocks window.open() called from a <select> change handler, but honours a
-   real anchor click made during the same user gesture. */
+/* Touch devices (notably iOS Safari) cannot open a new tab from a <select>
+   change — there's no user activation left once the picker is dismissed — so
+   we navigate the current tab there (the back button returns to the tracker)
+   and only open a new tab on desktop where it works reliably. */
+function isTouch() {
+  return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+}
+
 function openChapter(url) {
   if (!url) return;
+  if (isTouch()) {
+    window.location.href = url;
+    return;
+  }
   const a = document.createElement('a');
   a.href = url;
   a.target = '_blank';
@@ -199,11 +208,18 @@ function openChapter(url) {
   a.remove();
 }
 
-function continueReading(btn) {
+async function continueReading(btn) {
   const url = btn.dataset.url;
-  openChapter(url);
   const card = btn.closest('.card');
-  if (card && url) markRead(card.dataset.mangaId, url);
+  const id = card ? card.dataset.mangaId : null;
+  if (isTouch()) {
+    // Record progress before we navigate away, or the request gets cut off.
+    if (id && url) await markRead(id, url);
+    if (url) window.location.href = url;
+    return;
+  }
+  openChapter(url);
+  if (id && url) markRead(id, url);
 }
 
 /* The chapter menu is pure navigation: it opens any chapter without touching
