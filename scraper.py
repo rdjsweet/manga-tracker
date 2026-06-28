@@ -13,14 +13,14 @@ def scrape_manga_details(url):
         title_tag = soup.find("h1", class_="font-bold text-lg md:text-2xl")
         if not title_tag:
             print("Could not find the manga title element on the page.")
-            return None, None, None, None, None
+            return None, None, None, None
 
         title = title_tag.text.strip()
 
         chapters_div = soup.find("div", id="chapters")
         if not chapters_div:
             print("Could not find the 'chapters' element on the page.")
-            return title, None, None, None, None
+            return title, None, None, None
 
         chapter_links = chapters_div.find_all(
             "a", class_="border border-border p-1 hover:bg-brand hover:text-white"
@@ -34,7 +34,7 @@ def scrape_manga_details(url):
 
         if not chapter_titles:
             print("No chapters found on the page.")
-            return title, [], [], None, 0
+            return title, [], [], 0
 
         chapter_count = len(chapter_links)
 
@@ -42,7 +42,7 @@ def scrape_manga_details(url):
 
     except requests.exceptions.RequestException as e:
         print(f"Error fetching the URL: {e}")
-        return None, None, None, None, None
+        return None, None, None, None
 
 
 if __name__ == "__main__":
