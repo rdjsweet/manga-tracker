@@ -48,8 +48,7 @@
 
         <div class="toolbar">
             <form class="add-form" action="{{ url_for('manga.add_manga') }}" method="POST">
-                <input type="text" name="url" id="url" placeholder="Paste a MangaPill chapter-list URL to track…"
-                    required>
+                <input type="text" name="url" id="url" placeholder="Paste a MangaPill chapter-list URL" required>
                 <button class="btn-primary" type="submit">Add</button>
             </form>
             <form action="{{ url_for('manga.check_updates') }}" method="POST">

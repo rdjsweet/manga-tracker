@@ -143,6 +143,8 @@ header.top {
     height: 40px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    white-space: nowrap;
     border-radius: 10px;
     font-weight: 600;
     font-size: .9rem;

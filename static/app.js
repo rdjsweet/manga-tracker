@@ -185,11 +185,25 @@ async function markRead(mangaId, chapterUrl) {
   }
 }
 
+/* Open a chapter in a new tab via a synthetic anchor click. mobile Safari
+   blocks window.open() called from a <select> change handler, but honours a
+   real anchor click made during the same user gesture. */
+function openChapter(url) {
+  if (!url) return;
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 function continueReading(btn) {
   const url = btn.dataset.url;
-  if (url) window.open(url, '_blank', 'noopener');
+  openChapter(url);
   const card = btn.closest('.card');
-  if (card) markRead(card.dataset.mangaId, url);
+  if (card && url) markRead(card.dataset.mangaId, url);
 }
 
 /* The chapter menu is pure navigation: it opens any chapter without touching
@@ -197,8 +211,7 @@ function continueReading(btn) {
    position and re-flags newer chapters as unread. "Continue" is what advances
    progress. */
 function jumpToChapter(select) {
-  const url = select.value;
-  if (url) window.open(url, '_blank', 'noopener');
+  openChapter(select.value);
   select.selectedIndex = 0;
 }
 
