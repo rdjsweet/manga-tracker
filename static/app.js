@@ -1,6 +1,14 @@
 /* -------------------------------------------------------
    Inline flash messages
 ------------------------------------------------------- */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function showFlash(message, category) {
   let container = document.querySelector('.flashes');
   if (!container) {
@@ -34,7 +42,7 @@ function renderMangaCard(manga) {
 
   const firstUrl = manga.chapters.length > 0 ? manga.chapters[0].url : '#';
   const chapterOptions = manga.chapters
-    .map((ch, i) => `<option value="${ch.url}"${i === 0 ? ' selected' : ''}>${ch.chapter_title}</option>`)
+    .map((ch, i) => `<option value="${ch.url}"${i === 0 ? ' selected' : ''}>${escapeHtml(ch.chapter_title)}</option>`)
     .join('');
 
   const newBadge = manga.new_chapters_count > 0
@@ -42,8 +50,8 @@ function renderMangaCard(manga) {
     : '';
 
   li.innerHTML = `
-    <strong>${manga.title}</strong><br>
-    Latest Chapter: ${manga.latest_chapter_title || 'N/A'}<br>
+    <strong>${escapeHtml(manga.title)}</strong><br>
+    Latest Chapter: ${escapeHtml(manga.latest_chapter_title || 'N/A')}<br>
     <label for="chapter_select_${manga.id}">Read Chapter:</label>
     <select id="chapter_select_${manga.id}" name="chapter"
       onchange="updateChapterLink(${manga.id})">
@@ -52,7 +60,7 @@ function renderMangaCard(manga) {
     ${newBadge}
     <div class="manga-links">
       <a id="read_link_${manga.id}" href="${firstUrl}" target="_blank">Read on MangaPill</a>
-      <a href="#" data-manga-id="${manga.id}" data-manga-title="${manga.title}"
+      <a href="#" data-manga-id="${manga.id}" data-manga-title="${escapeHtml(manga.title)}"
          onclick="confirmDelete(this.dataset.mangaId, this.dataset.mangaTitle)">Delete</a>
     </div>
   `;
@@ -76,7 +84,7 @@ function renderLogs(logs) {
   ul.innerHTML = '';
   logs.forEach(log => {
     const li = document.createElement('li');
-    li.innerHTML = `${log.date_added}<br><strong>${log.manga_title}</strong>${log.chapters_added > 0 ? `: ${log.chapters_added} new chapter(s) added!` : ''}`;
+    li.innerHTML = `${escapeHtml(log.date_added)}<br><strong>${escapeHtml(log.manga_title)}</strong>${log.chapters_added > 0 ? `: ${log.chapters_added} new chapter(s) added!` : ''}`;
     ul.appendChild(li);
   });
 }
