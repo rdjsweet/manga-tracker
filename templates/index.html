@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>📖</text></svg>">
     <title>MangaPill Chapter Tracker - Home</title>
 </head>
 
@@ -20,7 +24,7 @@
     <div class="wrap">
         <a href="{{ url_for('auth.logout') }}" class="logout-btn">Log Out</a>
         <div class="title">
-            <img src="../static/images/ryangit.png">
+            <img src="{{ url_for('static', filename='images/ryangit.png') }}" alt="Site logo">
             <h1>MangaPill Chapter Tracker</h1>
         </div>
 
@@ -61,34 +65,35 @@
                     <ul>
                         {% for manga in manga_list %}
                         <li data-manga-id="{{ manga['id'] }}"
-                            class="{% if manga['new_chapters_count'] > 0 %}updated-chapters{% endif %}">
-                            <strong>{{ manga['title'] }}</strong><br>
-                            Latest Chapter: {{ manga['latest_chapter_title'] }}<br>
-
-                            <label for="chapter_select_{{ manga['id'] }}">Read Chapter:</label>
-                            <select id="chapter_select_{{ manga['id'] }}" name="chapter"
-                                onchange="updateChapterLink({{ manga['id'] }})">
-                                {% for chapter in manga['chapters'] %}
-                                <option value="{{ chapter['url'] }}" {% if loop.first %}selected{% endif %}>
-                                    {{ chapter['chapter_title'] }}
-                                </option>
-                                {% endfor %}
-                            </select><br>
-
-                            {% if manga['new_chapters_count'] > 0 %}
-                            <span class="new-chapters"># {{ manga['new_chapters_count'] }} new chapter(s)!</span><br>
-                            {% endif %}
-
-                            <div class="manga-links">
-                                <a id="read_link_{{ manga['id'] }}"
-                                   href="{{ manga['chapters'][0]['url'] if manga['chapters'] else '#' }}"
-                                   target="_blank">Read on MangaPill</a>
-                                <a href="#"
-                                   data-manga-id="{{ manga['id'] }}"
-                                   data-manga-title="{{ manga['title'] }}"
-                                   onclick="confirmDelete(this.dataset.mangaId, this.dataset.mangaTitle)">Delete</a>
+                            class="manga-card{% if manga['new_chapters_count'] > 0 %} updated{% endif %}">
+                            <div class="manga-card-top">
+                                <strong class="manga-title">{{ manga['title'] }}</strong>
+                                {% if manga['new_chapters_count'] > 0 %}
+                                <span class="badge-new">{{ manga['new_chapters_count'] }} new</span>
+                                {% endif %}
                             </div>
+                            <p class="manga-latest">Latest: {{ manga['latest_chapter_title'] }}</p>
+
+                            <div class="manga-actions">
+                                <a class="btn-read"
+                                   href="{{ manga['chapters'][0]['url'] if manga['chapters'] else '#' }}"
+                                   target="_blank" rel="noopener noreferrer">Read latest</a>
+                                <select class="chapter-jump" aria-label="Jump to a chapter for {{ manga['title'] }}"
+                                    onchange="jumpToChapter(this)">
+                                    <option value="" disabled selected>Jump to chapter…</option>
+                                    {% for chapter in manga['chapters'] %}
+                                    <option value="{{ chapter['url'] }}">{{ chapter['chapter_title'] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <button type="button" class="btn-delete"
+                                data-manga-id="{{ manga['id'] }}"
+                                data-manga-title="{{ manga['title'] }}"
+                                onclick="confirmDelete(this.dataset.mangaId, this.dataset.mangaTitle)">Delete</button>
                         </li>
+                        {% else %}
+                        <li class="empty-state">No manga tracked yet.<br>Paste a chapter-list URL above to start.</li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -104,6 +109,8 @@
                                 : {{ log['chapters_added'] }} new chapter(s) added!
                                 {% endif %}
                             </li>
+                            {% else %}
+                            <li class="empty-state">No activity yet.</li>
                             {% endfor %}
                         </ul>
                     </div>
@@ -112,9 +119,11 @@
         </div>
 
         <div id="deleteModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeModal()">&times;</span>
-                <h2>Confirm Deletion</h2>
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title"
+                aria-describedby="modal-text">
+                <span class="close" role="button" aria-label="Close dialog" tabindex="0"
+                    onclick="closeModal()">&times;</span>
+                <h2 id="modal-title">Confirm Deletion</h2>
                 <p id="modal-text">Are you sure you want to delete this manga?</p>
                 <button id="confirmDeleteBtn">✓</button>
                 <button class="modal-cancel-btn" onclick="closeModal()">✕</button>
